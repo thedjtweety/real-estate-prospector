@@ -215,24 +215,40 @@ export default function Home() {
                 )}
               />
 
-              <Button 
-                type="submit" 
-                size="lg" 
-                className="w-full bg-navy-700 hover:bg-navy-800"
-                disabled={isSearching}
-              >
-                {isSearching ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Scrubbing data...
-                  </>
-                ) : (
-                  <>
-                    <Search className="mr-2 h-5 w-5" />
-                    Start Deep Dive
-                  </>
-                )}
-              </Button>
+              <div className="flex gap-3">
+                <Button 
+                  type="button"
+                  variant="outline"
+                  size="lg" 
+                  className="flex-1"
+                  onClick={() => {
+                    form.reset();
+                    setSearchResult(null);
+                    toast.success("Form cleared");
+                  }}
+                  disabled={isSearching}
+                >
+                  Clear Form
+                </Button>
+                <Button 
+                  type="submit" 
+                  size="lg" 
+                  className="flex-1 bg-navy-700 hover:bg-navy-800"
+                  disabled={isSearching}
+                >
+                  {isSearching ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Scrubbing data...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="mr-2 h-5 w-5" />
+                      Start Deep Dive
+                    </>
+                  )}
+                </Button>
+              </div>
             </form>
           </Form>
         </CardContent>

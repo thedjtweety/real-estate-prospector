@@ -77,3 +77,7 @@
 - [x] Create funny catchphrase below logo
 - [x] Update color scheme to more vibrant, saturated tones (less bland)
 - [x] Increase color contrast throughout the app
+
+## Bug Fixes (User Reported)
+- [x] Add reset button to clear search form
+- [x] Fix cache issue causing previous search data to persist between searches
