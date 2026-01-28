@@ -365,7 +365,7 @@ export default function Home() {
             </Card>
           )}
 
-          {/* Contacts */}
+          {/* Contacts with Decision-Maker Intelligence */}
           {searchResult.contacts && searchResult.contacts.length > 0 && (
             <Card className="border-navy-200 shadow-lg">
               <CardHeader className="bg-gradient-to-r from-navy-50 to-gold-50">
@@ -373,44 +373,196 @@ export default function Home() {
                   <Users className="h-6 w-6 text-navy-700" />
                   Key Contacts ({searchResult.contacts.length})
                 </CardTitle>
+                <CardDescription>
+                  Sorted by approach priority • Decision-maker scores and intelligence
+                </CardDescription>
               </CardHeader>
               <CardContent className="pt-6">
                 <div className="space-y-4">
-                  {searchResult.contacts.map((contact: any) => (
-                    <div key={contact.id} className="p-4 border border-navy-100 rounded-lg hover:border-navy-300 transition-colors">
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-lg text-navy-900">{contact.name}</h3>
-                            {contact.isPrimary && (
-                              <Badge className="bg-gold-500">Primary Contact</Badge>
-                            )}
+                  {searchResult.contacts
+                    .sort((a: any, b: any) => {
+                      // Sort by approach order (lower number = contact first)
+                      const orderA = a.approachOrder || 999;
+                      const orderB = b.approachOrder || 999;
+                      if (orderA !== orderB) return orderA - orderB;
+                      // Then by decision-maker score
+                      const scoreA = a.decisionMakerScore || 0;
+                      const scoreB = b.decisionMakerScore || 0;
+                      return scoreB - scoreA;
+                    })
+                    .map((contact: any, index: number) => {
+                      const dmScore = contact.decisionMakerScore || 0;
+                      const approachOrder = contact.approachOrder || index + 1;
+                      
+                      // Color coding based on decision-maker score
+                      let borderColor = 'border-navy-100';
+                      let bgColor = 'bg-white';
+                      let scoreColor = 'text-navy-600';
+                      let scoreBg = 'bg-navy-100';
+                      
+                      if (dmScore >= 80) {
+                        borderColor = 'border-green-300';
+                        bgColor = 'bg-green-50/30';
+                        scoreColor = 'text-green-700';
+                        scoreBg = 'bg-green-100';
+                      } else if (dmScore >= 60) {
+                        borderColor = 'border-gold-300';
+                        bgColor = 'bg-gold-50/30';
+                        scoreColor = 'text-gold-700';
+                        scoreBg = 'bg-gold-100';
+                      } else if (dmScore >= 40) {
+                        borderColor = 'border-blue-300';
+                        bgColor = 'bg-blue-50/30';
+                        scoreColor = 'text-blue-700';
+                        scoreBg = 'bg-blue-100';
+                      }
+                      
+                      return (
+                        <div key={contact.id} className={`p-5 border-2 ${borderColor} ${bgColor} rounded-lg hover:shadow-md transition-all`}>
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1 space-y-3">
+                              {/* Name and Priority Badges */}
+                              <div className="flex items-start gap-2 flex-wrap">
+                                <h3 className="font-semibold text-lg text-navy-900">{contact.name}</h3>
+                                
+                                {/* Approach Order Badge */}
+                                {approachOrder === 1 && (
+                                  <Badge className="bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold">
+                                    ⭐ Contact First
+                                  </Badge>
+                                )}
+                                {approachOrder === 2 && (
+                                  <Badge className="bg-gradient-to-r from-gold-500 to-gold-600 text-white font-semibold">
+                                    2nd Priority
+                                  </Badge>
+                                )}
+                                {approachOrder === 3 && (
+                                  <Badge className="bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold">
+                                    3rd Priority
+                                  </Badge>
+                                )}
+                                
+                                {/* Primary Contact */}
+                                {contact.isPrimary && (
+                                  <Badge className="bg-gold-500 text-white">Primary Contact</Badge>
+                                )}
+                                
+                                {/* Gatekeeper */}
+                                {contact.isGatekeeper && (
+                                  <Badge variant="outline" className="border-orange-400 text-orange-700">
+                                    Gatekeeper
+                                  </Badge>
+                                )}
+                              </div>
+                              
+                              {/* Title and Role */}
+                              <div className="flex flex-wrap items-center gap-2">
+                                {contact.title && (
+                                  <p className="text-navy-700 font-medium">{contact.title}</p>
+                                )}
+                                {contact.role && (
+                                  <Badge variant="outline" className="capitalize">
+                                    {contact.role.replace(/_/g, " ")}
+                                  </Badge>
+                                )}
+                                {contact.seniorityLevel && contact.seniorityLevel !== 'unknown' && (
+                                  <Badge variant="secondary" className="capitalize text-xs">
+                                    {contact.seniorityLevel}
+                                  </Badge>
+                                )}
+                              </div>
+                              
+                              {/* Contact Info */}
+                              <div className="flex flex-wrap gap-4 text-sm text-navy-700">
+                                {contact.email && (
+                                  <span className="flex items-center gap-1">📧 {contact.email}</span>
+                                )}
+                                {contact.phone && (
+                                  <span className="flex items-center gap-1">📞 {contact.phone}</span>
+                                )}
+                                {contact.linkedInUrl && (
+                                  <a href={contact.linkedInUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-600 hover:underline">
+                                    🔗 LinkedIn
+                                  </a>
+                                )}
+                              </div>
+                              
+                              {/* Best Contact Method */}
+                              {contact.bestContactMethod && contact.bestContactMethod !== 'unknown' && (
+                                <p className="text-sm text-navy-600">
+                                  💡 Best contact method: <span className="font-medium capitalize">{contact.bestContactMethod}</span>
+                                </p>
+                              )}
+                              
+                              {/* NAR Designations */}
+                              {contact.narDesignations && contact.narDesignations.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                  {contact.narDesignations.map((designation: string, idx: number) => (
+                                    <Badge key={idx} variant="secondary" className="text-xs">
+                                      {designation}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                              
+                              {/* Warm Intro Path */}
+                              {contact.warmIntroPath && (
+                                <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                                  <p className="text-sm text-green-800">
+                                    <span className="font-semibold">🤝 Warm Intro:</span> {contact.warmIntroPath}
+                                  </p>
+                                </div>
+                              )}
+                              
+                              {/* Recent Achievements */}
+                              {contact.recentAchievements && contact.recentAchievements.length > 0 && (
+                                <div className="space-y-1">
+                                  <p className="text-xs font-semibold text-navy-700">🏆 Recent Achievements:</p>
+                                  <ul className="text-xs text-navy-600 space-y-1 ml-4">
+                                    {contact.recentAchievements.map((achievement: string, idx: number) => (
+                                      <li key={idx} className="list-disc">{achievement}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                              
+                              {/* Pain Points */}
+                              {contact.painPoints && contact.painPoints.length > 0 && (
+                                <div className="space-y-1">
+                                  <p className="text-xs font-semibold text-navy-700">⚠️ Potential Pain Points:</p>
+                                  <ul className="text-xs text-navy-600 space-y-1 ml-4">
+                                    {contact.painPoints.map((pain: string, idx: number) => (
+                                      <li key={idx} className="list-disc">{pain}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                              
+                              {/* Role Confidence */}
+                              {contact.roleConfidence && (
+                                <p className="text-xs text-navy-500">
+                                  Role confidence: {(parseFloat(contact.roleConfidence) * 100).toFixed(0)}%
+                                </p>
+                              )}
+                            </div>
+                            
+                            {/* Decision-Maker Score */}
+                            <div className="flex flex-col items-center gap-2 min-w-[100px]">
+                              <div className={`flex flex-col items-center justify-center w-20 h-20 rounded-full ${scoreBg} border-2 ${borderColor}`}>
+                                <span className={`text-2xl font-bold ${scoreColor}`}>{dmScore}</span>
+                                <span className="text-xs text-navy-600">DM Score</span>
+                              </div>
+                              {contact.influenceScore && contact.influenceScore > 0 && (
+                                <div className="text-center">
+                                  <p className="text-xs text-navy-600">Influence</p>
+                                  <p className="text-sm font-semibold text-navy-700">{contact.influenceScore}/100</p>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          {contact.title && (
-                            <p className="text-navy-600">{contact.title}</p>
-                          )}
-                          {contact.role && (
-                            <Badge variant="outline" className="capitalize">
-                              {contact.role.replace(/_/g, " ")}
-                            </Badge>
-                          )}
-                          <div className="flex flex-wrap gap-4 text-sm text-navy-700">
-                            {contact.email && (
-                              <span>📧 {contact.email}</span>
-                            )}
-                            {contact.phone && (
-                              <span>📞 {contact.phone}</span>
-                            )}
-                          </div>
-                          {contact.roleConfidence && (
-                            <p className="text-xs text-navy-500">
-                              Role confidence: {(parseFloat(contact.roleConfidence) * 100).toFixed(0)}%
-                            </p>
-                          )}
                         </div>
-                      </div>
-                    </div>
-                  ))}
+                      );
+                    })}
                 </div>
               </CardContent>
             </Card>
@@ -438,6 +590,52 @@ export default function Home() {
                       <Badge variant={mls.type === "state" ? "default" : "secondary"} className="capitalize">
                         {mls.type}
                       </Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Technology Stack */}
+          {searchResult.business?.technologyStack && searchResult.business.technologyStack.length > 0 && (
+            <Card className="border-navy-200 shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-navy-50 to-gold-50">
+                <CardTitle className="text-xl font-display flex items-center gap-2">
+                  💻 Technology Stack
+                </CardTitle>
+                <CardDescription>
+                  Current tools and platforms in use
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="flex flex-wrap gap-2">
+                  {searchResult.business.technologyStack.map((tech: string, idx: number) => (
+                    <Badge key={idx} variant="secondary" className="text-sm px-3 py-1">
+                      {tech}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Conversation Starters */}
+          {searchResult.business?.conversationStarters && searchResult.business.conversationStarters.length > 0 && (
+            <Card className="border-navy-200 shadow-lg bg-gradient-to-br from-green-50 to-blue-50">
+              <CardHeader className="bg-gradient-to-r from-green-100 to-blue-100">
+                <CardTitle className="text-xl font-display flex items-center gap-2">
+                  💡 Conversation Starters
+                </CardTitle>
+                <CardDescription>
+                  Use these insights to break the ice and build rapport
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="space-y-3">
+                  {searchResult.business.conversationStarters.map((starter: string, idx: number) => (
+                    <div key={idx} className="p-4 bg-white border border-green-200 rounded-lg">
+                      <p className="text-navy-800">{starter}</p>
                     </div>
                   ))}
                 </div>
