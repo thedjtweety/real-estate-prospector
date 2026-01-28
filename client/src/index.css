@@ -43,40 +43,40 @@
 }
 
 :root {
-  /* Elegant navy and gold palette for sophisticated real estate platform */
-  --primary: oklch(0.35 0.08 250); /* Deep navy blue */
-  --primary-foreground: oklch(0.98 0.01 240);
-  --sidebar-primary: oklch(0.35 0.08 250);
-  --sidebar-primary-foreground: oklch(0.98 0.01 240);
-  --chart-1: oklch(0.70 0.10 200);
-  --chart-2: oklch(0.65 0.12 250);
-  --chart-3: oklch(0.75 0.12 85);
-  --chart-4: oklch(0.60 0.10 200);
-  --chart-5: oklch(0.35 0.08 250);
+  /* Vibrant navy and gold palette - bold and saturated for maximum impact */
+  --primary: oklch(0.30 0.15 250); /* Rich, saturated navy blue */
+  --primary-foreground: oklch(1 0 0);
+  --sidebar-primary: oklch(0.30 0.15 250);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --chart-1: oklch(0.65 0.18 200);
+  --chart-2: oklch(0.55 0.20 250);
+  --chart-3: oklch(0.70 0.20 75); /* Vibrant gold */
+  --chart-4: oklch(0.50 0.18 200);
+  --chart-5: oklch(0.30 0.15 250);
   --radius: 0.5rem;
-  --background: oklch(0.98 0.01 240); /* Soft white with hint of blue */
-  --foreground: oklch(0.20 0.02 240); /* Near black with blue undertone */
+  --background: oklch(0.97 0.005 240); /* Crisp white */
+  --foreground: oklch(0.15 0.03 250); /* Deep navy text */
   --card: oklch(1 0 0); /* Pure white cards */
-  --card-foreground: oklch(0.20 0.02 240);
+  --card-foreground: oklch(0.15 0.03 250);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.20 0.02 240);
-  --secondary: oklch(0.75 0.12 85); /* Warm gold accent */
-  --secondary-foreground: oklch(0.20 0.02 240);
-  --muted: oklch(0.96 0.01 240); /* Soft gray background */
-  --muted-foreground: oklch(0.45 0.02 240);
-  --accent: oklch(0.70 0.10 200); /* Refined teal */
-  --accent-foreground: oklch(0.98 0.01 240);
-  --destructive: oklch(0.58 0.20 25);
-  --destructive-foreground: oklch(0.98 0.01 240);
-  --border: oklch(0.90 0.01 240);
-  --input: oklch(0.90 0.01 240);
-  --ring: oklch(0.35 0.08 250);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.20 0.02 240);
-  --sidebar-accent: oklch(0.96 0.01 240);
-  --sidebar-accent-foreground: oklch(0.20 0.02 240);
-  --sidebar-border: oklch(0.90 0.01 240);
-  --sidebar-ring: oklch(0.35 0.08 250);
+  --popover-foreground: oklch(0.15 0.03 250);
+  --secondary: oklch(0.70 0.20 75); /* Bold gold accent */
+  --secondary-foreground: oklch(0.15 0.03 250);
+  --muted: oklch(0.94 0.01 240); /* Light background */
+  --muted-foreground: oklch(0.40 0.05 250);
+  --accent: oklch(0.65 0.18 200); /* Vibrant teal */
+  --accent-foreground: oklch(1 0 0);
+  --destructive: oklch(0.55 0.25 25);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.85 0.02 240);
+  --input: oklch(0.85 0.02 240);
+  --ring: oklch(0.30 0.15 250);
+  --sidebar: oklch(0.30 0.15 250); /* Rich navy sidebar */
+  --sidebar-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.40 0.15 250);
+  --sidebar-accent-foreground: oklch(1 0 0);
+  --sidebar-border: oklch(0.25 0.15 250);
+  --sidebar-ring: oklch(0.70 0.20 75);
 }
 
 .dark {
@@ -197,5 +197,193 @@
       padding-right: 2rem;
       max-width: 1280px; /* Standard content width */
     }
+  }
+}
+/* Custom vibrant navy and gold utility classes */
+@layer utilities {
+  .text-navy-900 {
+    color: oklch(0.15 0.03 250);
+  }
+  .text-navy-800 {
+    color: oklch(0.25 0.08 250);
+  }
+  .text-navy-700 {
+    color: oklch(0.30 0.15 250);
+  }
+  .text-navy-600 {
+    color: oklch(0.40 0.12 250);
+  }
+  .text-navy-500 {
+    color: oklch(0.50 0.10 250);
+  }
+  .text-navy-400 {
+    color: oklch(0.60 0.08 250);
+  }
+  .text-navy-300 {
+    color: oklch(0.70 0.06 250);
+  }
+  .text-navy-200 {
+    color: oklch(0.85 0.03 250);
+  }
+  .text-navy-100 {
+    color: oklch(0.92 0.01 250);
+  }
+  .text-navy-50 {
+    color: oklch(0.96 0.005 250);
+  }
+  
+  .bg-navy-900 {
+    background-color: oklch(0.15 0.03 250);
+  }
+  .bg-navy-800 {
+    background-color: oklch(0.25 0.08 250);
+  }
+  .bg-navy-700 {
+    background-color: oklch(0.30 0.15 250);
+  }
+  .bg-navy-600 {
+    background-color: oklch(0.40 0.12 250);
+  }
+  .bg-navy-500 {
+    background-color: oklch(0.50 0.10 250);
+  }
+  .bg-navy-400 {
+    background-color: oklch(0.60 0.08 250);
+  }
+  .bg-navy-300 {
+    background-color: oklch(0.70 0.06 250);
+  }
+  .bg-navy-200 {
+    background-color: oklch(0.85 0.03 250);
+  }
+  .bg-navy-100 {
+    background-color: oklch(0.92 0.01 250);
+  }
+  .bg-navy-50 {
+    background-color: oklch(0.96 0.005 250);
+  }
+  
+  .border-navy-900 {
+    border-color: oklch(0.15 0.03 250);
+  }
+  .border-navy-800 {
+    border-color: oklch(0.25 0.08 250);
+  }
+  .border-navy-700 {
+    border-color: oklch(0.30 0.15 250);
+  }
+  .border-navy-600 {
+    border-color: oklch(0.40 0.12 250);
+  }
+  .border-navy-500 {
+    border-color: oklch(0.50 0.10 250);
+  }
+  .border-navy-400 {
+    border-color: oklch(0.60 0.08 250);
+  }
+  .border-navy-300 {
+    border-color: oklch(0.70 0.06 250);
+  }
+  .border-navy-200 {
+    border-color: oklch(0.85 0.03 250);
+  }
+  .border-navy-100 {
+    border-color: oklch(0.92 0.01 250);
+  }
+  .border-navy-50 {
+    border-color: oklch(0.96 0.005 250);
+  }
+  
+  .text-gold-900 {
+    color: oklch(0.35 0.15 75);
+  }
+  .text-gold-800 {
+    color: oklch(0.45 0.18 75);
+  }
+  .text-gold-700 {
+    color: oklch(0.55 0.20 75);
+  }
+  .text-gold-600 {
+    color: oklch(0.60 0.20 75);
+  }
+  .text-gold-500 {
+    color: oklch(0.70 0.20 75);
+  }
+  .text-gold-400 {
+    color: oklch(0.75 0.15 75);
+  }
+  .text-gold-300 {
+    color: oklch(0.80 0.12 75);
+  }
+  .text-gold-200 {
+    color: oklch(0.88 0.08 75);
+  }
+  .text-gold-100 {
+    color: oklch(0.93 0.04 75);
+  }
+  .text-gold-50 {
+    color: oklch(0.96 0.02 75);
+  }
+  
+  .bg-gold-900 {
+    background-color: oklch(0.35 0.15 75);
+  }
+  .bg-gold-800 {
+    background-color: oklch(0.45 0.18 75);
+  }
+  .bg-gold-700 {
+    background-color: oklch(0.55 0.20 75);
+  }
+  .bg-gold-600 {
+    background-color: oklch(0.60 0.20 75);
+  }
+  .bg-gold-500 {
+    background-color: oklch(0.70 0.20 75);
+  }
+  .bg-gold-400 {
+    background-color: oklch(0.75 0.15 75);
+  }
+  .bg-gold-300 {
+    background-color: oklch(0.80 0.12 75);
+  }
+  .bg-gold-200 {
+    background-color: oklch(0.88 0.08 75);
+  }
+  .bg-gold-100 {
+    background-color: oklch(0.93 0.04 75);
+  }
+  .bg-gold-50 {
+    background-color: oklch(0.96 0.02 75);
+  }
+  
+  .border-gold-900 {
+    border-color: oklch(0.35 0.15 75);
+  }
+  .border-gold-800 {
+    border-color: oklch(0.45 0.18 75);
+  }
+  .border-gold-700 {
+    border-color: oklch(0.55 0.20 75);
+  }
+  .border-gold-600 {
+    border-color: oklch(0.60 0.20 75);
+  }
+  .border-gold-500 {
+    border-color: oklch(0.70 0.20 75);
+  }
+  .border-gold-400 {
+    border-color: oklch(0.75 0.15 75);
+  }
+  .border-gold-300 {
+    border-color: oklch(0.80 0.12 75);
+  }
+  .border-gold-200 {
+    border-color: oklch(0.88 0.08 75);
+  }
+  .border-gold-100 {
+    border-color: oklch(0.93 0.04 75);
+  }
+  .border-gold-50 {
+    border-color: oklch(0.96 0.02 75);
   }
 }

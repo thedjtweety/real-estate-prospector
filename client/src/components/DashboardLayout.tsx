@@ -161,7 +161,7 @@ function DashboardLayoutContent({
           className="border-r-0"
           disableTransition={isResizing}
         >
-          <SidebarHeader className="h-16 justify-center">
+          <SidebarHeader className="py-4 justify-center">
             <div className="flex items-center gap-3 px-2 transition-all w-full">
               <button
                 onClick={toggleSidebar}
@@ -171,10 +171,16 @@ function DashboardLayoutContent({
                 <PanelLeft className="h-4 w-4 text-muted-foreground" />
               </button>
               {!isCollapsed ? (
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="font-semibold tracking-tight truncate">
-                    Super Scrubber
-                  </span>
+                <div className="flex flex-col gap-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <img src="/super-scrubber-logo.png" alt="Super Scrubber" className="h-8 w-8 object-contain" />
+                    <span className="font-display font-bold text-lg tracking-tight truncate text-navy-900">
+                      Super Scrubber
+                    </span>
+                  </div>
+                  <p className="text-xs text-navy-600 font-medium italic pl-10">
+                    We clean up your leads... literally!
+                  </p>
                 </div>
               ) : null}
             </div>

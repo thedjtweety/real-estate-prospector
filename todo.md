@@ -71,3 +71,9 @@
 - [x] Aggregate and cross-reference data from multiple sources
 - [x] Build confidence scoring based on source agreement
 - [x] Handle various website structures and formats
+
+## Design Improvements (User Requested)
+- [x] Add logo image to sidebar header
+- [x] Create funny catchphrase below logo
+- [x] Update color scheme to more vibrant, saturated tones (less bland)
+- [x] Increase color contrast throughout the app
