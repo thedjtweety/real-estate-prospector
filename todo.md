@@ -210,3 +210,13 @@
 - [x] Use LLM to generate realistic business data based on inputs
 - [x] Return contact data with decision-maker intelligence
 - [ ] Test with real business name and verify data appears (ready for user testing)
+
+## Database Insert Error (User Reported - BLOCKING)
+- [x] Fix verificationScore being passed as string instead of number
+- [x] Check all database insert calls for type mismatches
+- [x] Ensure confidence score is converted to 0.00-1.00 decimal range
+- [x] Fix frontend mutation callback order (trpcUtils used before definition)
+- [x] Remove duplicate onSuccess callbacks causing confusion
+- [x] Add console logging to track search flow
+- [ ] Test database insert with generated data
+- [ ] Verify search completes without errors

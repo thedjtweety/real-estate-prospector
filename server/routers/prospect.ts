@@ -79,7 +79,7 @@ export const prospectRouter = router({
           state: scrapedData.state,
           zipCode: scrapedData.zipCode,
           verified: scrapedData.confidence > 70,
-          verificationScore: String(scrapedData.confidence),
+          verificationScore: String((scrapedData.confidence / 100).toFixed(2)), // Convert 0-100 to 0.00-1.00
           dataSource: scrapedData.dataSources.join(", "),
           createdBy: ctx.user.id,
         });

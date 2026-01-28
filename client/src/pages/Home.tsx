@@ -47,34 +47,29 @@ export default function Home() {
     },
   });
 
+  const trpcUtils = trpc.useUtils();
+
   const searchMutation = trpc.prospect.search.useMutation({
     onSuccess: async (data) => {
-      toast.success("Search completed!");
-      
-      // Fetch full results
-      if (data.searchId) {
-        const results = await trpcUtils.results.getSearchResult.fetch({ searchId: data.searchId });
-        setSearchResult(results);
-      }
+      console.log('[Home] Search mutation success:', data);
+      setCurrentSearchId(data.searchId.toString());
+      toast.success("Search started! Gathering intelligence...");
     },
     onError: (error) => {
+      console.error('[Home] Search mutation error:', error);
       setIsSearching(false);
+      setCurrentSearchId(null);
       toast.error(`Search failed: ${error.message}`);
     },
   });
 
-  const trpcUtils = trpc.useUtils();
-
   const onSubmit = async (data: SearchFormData) => {
+    console.log('[Home] Form submitted:', data);
     setIsSearching(true);
     setSearchResult(null);
     setCurrentSearchId(null);
     
-    searchMutation.mutate(data, {
-      onSuccess: (result) => {
-        setCurrentSearchId(result.searchId.toString());
-      },
-    });
+    searchMutation.mutate(data);
   };
 
   return (
@@ -279,8 +274,18 @@ export default function Home() {
       {isSearching && currentSearchId && (
         <SearchProgress 
           searchId={currentSearchId} 
-          onComplete={() => {
+          onComplete={async () => {
+            console.log('[Home] Search complete, fetching results for searchId:', currentSearchId);
             setIsSearching(false);
+            try {
+              const results = await trpcUtils.results.getSearchResult.fetch({ searchId: parseInt(currentSearchId) });
+              console.log('[Home] Results fetched:', results);
+              setSearchResult(results);
+              toast.success("Intelligence gathered successfully!");
+            } catch (error) {
+              console.error('[Home] Failed to fetch results:', error);
+              toast.error("Failed to load results");
+            }
           }}
         />
       )}
