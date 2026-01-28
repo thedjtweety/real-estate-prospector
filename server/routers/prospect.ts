@@ -44,47 +44,14 @@ export const prospectRouter = router({
       });
 
       try {
+        console.log('[ProspectRouter] Starting fresh search for:', input);
         progressTracker.startStage('Initializing search');
         
         // Set the global progress tracker for the scraper to use
         setProgressTracker(progressTracker);
         
-        // Step 1: Check if business already exists in database
-        progressTracker.update('Initializing search', 'Checking existing database records...');
-        const existingBusinesses = await searchBusinesses({
-          name: input.name,
-          phone: input.phone,
-          email: input.email,
-          city: input.city,
-          state: input.state,
-        });
-
-        if (existingBusinesses.length > 0) {
-          // Found existing business
-          const processingTime = Date.now() - startTime;
-          await updateSearch(searchId, {
-            status: "completed",
-            businessId: existingBusinesses[0].id,
-            resultsCount: existingBusinesses.length,
-            processingTime,
-            resultsSummary: {
-              found: true,
-              businessId: existingBusinesses[0].id,
-              businessName: existingBusinesses[0].name,
-              source: "database",
-            },
-          });
-
-          return {
-            searchId,
-            found: true,
-            businessId: existingBusinesses[0].id,
-            source: "database",
-          };
-        }
-
-        // Step 2: Scrape comprehensive data from multiple sources
-        progressTracker.completeStage('Initializing search', 'No existing records found');
+        // Skip database lookup - always do fresh scraping
+        progressTracker.completeStage('Initializing search', 'Starting fresh search');
         progressTracker.startStage('Building intelligent queries');
         
         const scrapedData = await scrapeWithEnhancements({
@@ -208,7 +175,8 @@ export const prospectRouter = router({
         };
       } catch (error) {
         // Handle errors
-        console.error("Search error:", error);
+        console.error("[ProspectRouter] Search error:", error);
+        progressTracker.failStage('Search', error instanceof Error ? error.message : 'Unknown error');
         await updateSearch(searchId, {
           status: "failed",
           resultsSummary: {
