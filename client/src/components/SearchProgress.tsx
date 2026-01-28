@@ -22,24 +22,36 @@ export function SearchProgress({ searchId, onComplete }: SearchProgressProps) {
   const [currentProgress, setCurrentProgress] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
 
-  // Subscribe to progress updates
-  trpc.progress.subscribe.useSubscription(
+  // Poll for progress updates instead of subscription
+  const { data: progressData } = trpc.progress.getProgress.useQuery(
     { searchId },
     {
-      onData(update) {
-        setUpdates((prev) => [...prev, update]);
-        setCurrentProgress(update.percentage);
-
-        if (update.status === "completed" && update.stage === "Complete") {
-          setIsComplete(true);
-          onComplete?.();
-        }
-      },
-      onError(err) {
-        console.error("Progress subscription error:", err);
-      },
+      refetchInterval: isComplete ? false : 1000, // Poll every second until complete
+      enabled: !isComplete,
     }
   );
+
+  useEffect(() => {
+    if (progressData) {
+      // Add new update if it's different from the last one
+      setUpdates((prev) => {
+        const lastUpdate = prev[prev.length - 1];
+        if (!lastUpdate || 
+            lastUpdate.stage !== progressData.stage || 
+            lastUpdate.percentage !== progressData.percentage) {
+          return [...prev, progressData];
+        }
+        return prev;
+      });
+      
+      setCurrentProgress(progressData.percentage);
+
+      if (progressData.status === "completed" && progressData.stage === "Complete") {
+        setIsComplete(true);
+        onComplete?.();
+      }
+    }
+  }, [progressData, onComplete]);
 
   const latestUpdate = updates[updates.length - 1];
 

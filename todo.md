@@ -173,3 +173,8 @@
 - [x] Create conversation starters section with highlighted cards
 - [x] Sort contacts by approach order automatically
 - [x] Test all UI enhancements
+
+## Critical Bug Fix (User Reported)
+- [x] Fix tRPC subscription error causing application crash
+- [x] Remove or replace subscription usage with polling/queries
+- [x] Test application loads without errors
