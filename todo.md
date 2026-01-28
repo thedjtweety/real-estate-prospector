@@ -81,3 +81,8 @@
 ## Bug Fixes (User Reported)
 - [x] Add reset button to clear search form
 - [x] Fix cache issue causing previous search data to persist between searches
+
+## Logo & Branding Fixes (User Requested)
+- [x] Fix broken logo image path in sidebar
+- [x] Move logo and catchphrase to main content area above "Super Scrubber" heading
+- [x] Ensure logo is visible and properly sized

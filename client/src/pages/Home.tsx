@@ -72,6 +72,20 @@ export default function Home() {
 
   return (
     <div className="container mx-auto py-8 space-y-8">
+      {/* Logo and Branding */}
+      <div className="text-center space-y-3">
+        <div className="flex justify-center">
+          <img 
+            src="/super-scrubber-logo.png" 
+            alt="Super Scrubber Logo" 
+            className="h-32 w-32 object-contain"
+          />
+        </div>
+        <p className="text-lg text-navy-600 font-medium italic">
+          We clean up your leads... literally!
+        </p>
+      </div>
+
       {/* Header */}
       <div className="text-center space-y-4">
         <h1 className="text-5xl font-display font-bold text-navy-900">
