@@ -8,7 +8,7 @@ import {
   createContact,
   createMlsAssociation,
 } from "../db";
-import { scrapeWithEnhancements } from "../services/enhancedScraper";
+import { scrapeWithEnhancements, setProgressTracker } from "../services/enhancedScraper";
 import { categorizeContactRole, detectDuplicateContact } from "../services/llmIntelligence";
 import { createProgressTracker } from "../services/progressTracker";
 import { emitProgress } from "./progress";
@@ -45,6 +45,9 @@ export const prospectRouter = router({
 
       try {
         progressTracker.startStage('Initializing search');
+        
+        // Set the global progress tracker for the scraper to use
+        setProgressTracker(progressTracker);
         
         // Step 1: Check if business already exists in database
         progressTracker.update('Initializing search', 'Checking existing database records...');
