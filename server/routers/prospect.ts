@@ -8,7 +8,7 @@ import {
   createContact,
   createMlsAssociation,
 } from "../db";
-import { scrapeBusinessData } from "../services/realWebScraper";
+import { scrapeWithEnhancements } from "../services/enhancedScraper";
 import { categorizeContactRole, detectDuplicateContact } from "../services/llmIntelligence";
 
 export const prospectRouter = router({
@@ -71,7 +71,7 @@ export const prospectRouter = router({
         }
 
         // Step 2: Scrape comprehensive data from multiple sources
-        const scrapedData = await scrapeBusinessData({
+        const scrapedData = await scrapeWithEnhancements({
           name: input.name,
           website: input.website,
           phone: input.phone,
