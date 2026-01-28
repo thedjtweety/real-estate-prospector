@@ -8,7 +8,7 @@ import {
   createContact,
   createMlsAssociation,
 } from "../db";
-import { scrapeBusinessComprehensive } from "../services/webScraper";
+import { scrapeBusinessData } from "../services/realWebScraper";
 import { categorizeContactRole, detectDuplicateContact } from "../services/llmIntelligence";
 
 export const prospectRouter = router({
@@ -71,13 +71,15 @@ export const prospectRouter = router({
         }
 
         // Step 2: Scrape comprehensive data from multiple sources
-        const scrapedData = await scrapeBusinessComprehensive({
+        const scrapedData = await scrapeBusinessData({
           name: input.name,
           website: input.website,
           phone: input.phone,
           email: input.email,
+          address: input.address,
           city: input.city,
           state: input.state,
+          zipCode: input.zipCode,
         });
 
         // Step 3: Create business record
@@ -90,9 +92,9 @@ export const prospectRouter = router({
           city: scrapedData.city,
           state: scrapedData.state,
           zipCode: scrapedData.zipCode,
-          verified: scrapedData.overallConfidence > 0.7,
-          verificationScore: String(scrapedData.overallConfidence),
-          dataSource: scrapedData.sources.join(", "),
+          verified: scrapedData.confidence > 70,
+          verificationScore: String(scrapedData.confidence),
+          dataSource: scrapedData.dataSources.join(", "),
           createdBy: ctx.user.id,
         });
 
@@ -101,7 +103,7 @@ export const prospectRouter = router({
           // Use LLM to categorize role
           const roleInfo = await categorizeContactRole({
             name: contact.name,
-            title: contact.title,
+            title: contact.role,
             companyName: scrapedData.name,
           });
 
@@ -110,7 +112,7 @@ export const prospectRouter = router({
           const duplicationCheck = await detectDuplicateContact({
             newContact: {
               name: contact.name,
-              title: contact.title,
+              title: contact.role,
               email: contact.email,
               phone: contact.phone,
             },
@@ -127,14 +129,14 @@ export const prospectRouter = router({
           await createContact({
             businessId,
             name: contact.name,
-            title: contact.title,
+            title: contact.role,
             role: roleInfo.role,
             email: contact.email || null,
             phone: contact.phone || null,
             isPrimary: roleInfo.role === "owner" || roleInfo.role === "broker",
             roleConfidence: String(roleInfo.confidence),
             inferredFrom: roleInfo.reasoning,
-            dataSource: contact.source,
+            dataSource: scrapedData.dataSources[0] || 'web_scraping',
             createdBy: ctx.user.id,
           });
           }
@@ -147,7 +149,7 @@ export const prospectRouter = router({
             name: mls.name,
             type: mls.type,
             state: scrapedData.state,
-            dataSource: mls.source,
+            dataSource: scrapedData.dataSources[0] || 'web_scraping',
           });
         }
 
@@ -164,8 +166,8 @@ export const prospectRouter = router({
             businessName: scrapedData.name,
             contactsFound: scrapedData.contacts.length,
             mlsAssociationsFound: scrapedData.mlsAssociations.length,
-            sources: scrapedData.sources,
-            confidence: scrapedData.overallConfidence,
+            sources: scrapedData.dataSources,
+            confidence: scrapedData.confidence,
           },
         });
 
@@ -174,7 +176,7 @@ export const prospectRouter = router({
           found: true,
           businessId,
           source: "web_scraping",
-          confidence: scrapedData.overallConfidence,
+          confidence: scrapedData.confidence,
           contactsFound: scrapedData.contacts.length,
           mlsAssociationsFound: scrapedData.mlsAssociations.length,
         };
