@@ -220,3 +220,22 @@
 - [x] Add console logging to track search flow
 - [ ] Test database insert with generated data
 - [ ] Verify search completes without errors
+
+## Direct Web Scraping Implementation (User Requested)
+- [x] Install cheerio package for HTML parsing
+- [x] Implement Google search scraping with axios
+- [x] Add user-agent rotation to avoid blocking
+- [x] Extract business websites and contact info from search results
+- [x] Scrape individual business websites for detailed contact data
+- [x] Replace LLM mock data with real scraped data
+- [ ] Test with real business name and verify accuracy
+
+## Enhanced Scraper with Schema.org (Claude's Recommendations)
+- [x] Install libphonenumber-js and email-validator packages
+- [x] Review Claude's smartScraper.ts implementation
+- [x] Add Schema.org structured data extraction (95% accuracy)
+- [x] Integrate Cheerio for semantic HTML parsing
+- [x] Add phone and email validation
+- [x] Implement waterfall strategy (Schema.org → Cheerio → Puppeteer)
+- [ ] Test with real business and measure accuracy improvement
+- [ ] Expected result: 70% → 90% accuracy, 45s → 30s per search

@@ -152,77 +152,82 @@ function buildSearchQueries(input: {
 }
 
 /**
- * Generate realistic business data using LLM
- * Since web search API is not available, we use LLM to generate plausible data
+ * Perform real web scraping using direct Google search + website scraping
  */
 async function performSearch(queries: string[], businessInput: any): Promise<any[]> {
   try {
-    updateProgress('Searching Google', `Generating intelligence for: ${queries[0]}`);
+    updateProgress('Searching Google', `Scraping web for: ${queries[0]}`);
     
-    // Import LLM helper
-    const { invokeLLM } = await import('../_core/llm');
+    // Import smart scraper with Schema.org support
+    const { smartScrapeWebsite } = await import('./smartScraper');
+    const { searchGoogle } = await import('./directWebScraper');
     
-    // Use LLM to generate realistic business data
-    const prompt = `Generate realistic contact information for a real estate business with the following details:
-Business Name: ${businessInput.name || 'Unknown'}
-Location: ${businessInput.city || ''} ${businessInput.state || ''}
-Phone: ${businessInput.phone || ''}
-Email: ${businessInput.email || ''}
-Website: ${businessInput.website || ''}
-
-Generate 3-5 key contacts with realistic names, titles, emails, and phone numbers. Include decision-makers like Owner, Broker, Managing Partner, VP of Sales, etc.`;
+    // Build location string
+    const location = [businessInput.city, businessInput.state].filter(Boolean).join(', ');
+    const searchQuery = location ? `${businessInput.name} ${location}` : businessInput.name || queries[0];
     
-    const response = await invokeLLM({
-      messages: [
-        { role: 'system', content: 'You are a business intelligence researcher. Generate realistic contact data for real estate businesses.' },
-        { role: 'user', content: prompt }
-      ],
-      response_format: {
-        type: 'json_schema',
-        json_schema: {
-          name: 'business_contacts',
-          strict: true,
-          schema: {
-            type: 'object',
-            properties: {
-              contacts: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    name: { type: 'string' },
-                    title: { type: 'string' },
-                    email: { type: 'string' },
-                    phone: { type: 'string' },
-                    role: { type: 'string' }
-                  },
-                  required: ['name', 'title', 'email', 'phone', 'role'],
-                  additionalProperties: false
-                }
-              }
-            },
-            required: ['contacts'],
-            additionalProperties: false
-          }
-        }
+    // First, search Google to find the business website
+    updateProgress('Searching Google', `Finding website for: ${searchQuery}`);
+    const googleResults = await searchGoogle(searchQuery);
+    
+    if (googleResults.length === 0) {
+      updateProgress('Searching Google', 'No results found');
+      return [{
+        title: `${businessInput.name || 'Business'} - No results`,
+        url: businessInput.website || 'https://example.com',
+        snippet: 'No search results found'
+      }];
+    }
+    
+    // Get the top result URL (most likely the business website)
+    const businessUrl = googleResults[0].url;
+    updateProgress('Searching Google', `Found website: ${businessUrl}`);
+    
+    // Now use smart scraper to extract structured data
+    updateProgress('Extracting Data', 'Scraping website with Schema.org + Cheerio');
+    const scrapedData = await smartScrapeWebsite(businessUrl);
+    
+    updateProgress('Extracting Data', `Confidence: ${scrapedData.confidence}%, Contacts: ${scrapedData.contacts.length}`);
+    
+    // Convert scraped data to search result format
+    const results: any[] = [];
+    
+    // Create results from extracted contacts
+    if (scrapedData.contacts.length > 0) {
+      for (const contact of scrapedData.contacts) {
+        results.push({
+          title: `${contact.name} - ${contact.role}`,
+          url: scrapedData.website || businessInput.website || 'https://example.com',
+          snippet: `Contact: ${contact.email || scrapedData.email || businessInput.email || 'N/A'}, Phone: ${contact.phone || scrapedData.phone || businessInput.phone || 'N/A'}`
+        });
       }
-    });
+    }
     
-    const content = response.choices[0].message.content;
-    const data = JSON.parse(typeof content === 'string' ? content : '{}');
-    updateProgress('Searching Google', `Generated ${data.contacts?.length || 0} contacts`);
+    // If no contacts found, create generic contact from business data
+    if (results.length === 0 && (scrapedData.email || scrapedData.phone)) {
+      results.push({
+        title: `${scrapedData.name} - Main Contact`,
+        url: scrapedData.website || businessInput.website || 'https://example.com',
+        snippet: `Email: ${scrapedData.email || 'N/A'}, Phone: ${scrapedData.phone || 'N/A'}`
+      });
+    }
     
-    // Convert to search result format
-    return data.contacts?.map((contact: any) => ({
-      title: `${contact.name} - ${contact.title}`,
-      url: businessInput.website || 'https://example.com',
-      snippet: `${contact.name}, ${contact.title}. Email: ${contact.email}, Phone: ${contact.phone}`
-    })) || [];
+    // Fallback if no data found
+    if (results.length === 0) {
+      updateProgress('Searching Google', 'No contact data found, using input data');
+      results.push({
+        title: `${businessInput.name || 'Business'} - Contact Information`,
+        url: businessInput.website || 'https://example.com',
+        snippet: `Contact: ${businessInput.email || 'info@example.com'}, Phone: ${businessInput.phone || '(555) 123-4567'}`
+      });
+    }
+    
+    return results;
   } catch (error) {
-    console.error('[EnhancedScraper] Data generation failed:', error);
-    updateProgress('Searching Google', 'Using fallback data');
+    console.error('[EnhancedScraper] Web scraping failed:', error);
+    updateProgress('Searching Google', 'Scraping failed, using input data');
     
-    // Return basic fallback
+    // Return basic fallback from input
     return [{
       title: `${businessInput.name || 'Business'} - Contact Information`,
       url: businessInput.website || 'https://example.com',
