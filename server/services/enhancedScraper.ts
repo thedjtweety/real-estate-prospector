@@ -12,6 +12,25 @@ import axios from 'axios';
 import type { ScrapedBusinessData } from './realWebScraper';
 import { deepScrapeWebsite, scrapeNARDirectory, type DeepScrapedData } from './browserScraper';
 import { identifyMLSAssociations, type MLSAssociation } from './mlsIntelligence';
+import {
+  analyzeContactRole,
+  calculateDecisionMakerScore,
+  determineDecisionAuthority,
+  detectNARDesignations,
+  buildOrganizationalHierarchy,
+  determineApproachOrder,
+  detectTechnologyStack,
+  recommendContactMethod,
+  type ContactIntelligence,
+} from './decisionMakerIntelligence';
+import { gatherFootInTheDoorIntel, type FootInTheDoorIntel } from './footInTheDoorIntelligence';
+import {
+  identifyAssociationRoles,
+  calculateInfluenceScore,
+  identifyNetworkingOpportunities,
+  type AssociationRole,
+  type InfluenceScore,
+} from './associationLeadershipIntel';
 
 /**
  * Extract domain from email address
@@ -507,7 +526,124 @@ export async function scrapeWithEnhancements(input: {
     }
   }
 
-  // Step 7: Identify MLS and association memberships
+  // Step 7: Process contacts with decision-maker intelligence
+  console.log('[EnhancedScraper] Analyzing contacts with decision-maker intelligence');
+  const intelligentContacts: ContactIntelligence[] = [];
+  
+  if (enrichedData.contacts && enrichedData.contacts.length > 0) {
+    for (const contact of enrichedData.contacts) {
+      const roleAnalysis = analyzeContactRole({
+        name: contact.name,
+        title: contact.role, // role field contains the title/position
+        email: contact.email,
+      });
+      
+      const narDesignations = detectNARDesignations(
+        [contact.name, contact.role, deepScrapedData?.about || ''].join(' ')
+      );
+      
+      const decisionMakerScore = calculateDecisionMakerScore({
+        role: roleAnalysis.role,
+        seniorityLevel: roleAnalysis.seniorityLevel,
+        narDesignations,
+        associationRoles: [], // Will be populated later
+      });
+      
+      const intelligentContact: ContactIntelligence = {
+        name: contact.name,
+        title: contact.role, // role field contains the title/position
+        email: contact.email,
+        phone: contact.phone,
+        detectedRole: roleAnalysis.role,
+        roleConfidence: roleAnalysis.confidence,
+        seniorityLevel: roleAnalysis.seniorityLevel,
+        decisionMakerScore,
+        isPrimaryContact: false, // Will be set by determineApproachOrder
+        approachOrder: 0, // Will be set by determineApproachOrder
+        isGatekeeper: roleAnalysis.role === 'assistant',
+        decisionAuthority: determineDecisionAuthority(roleAnalysis.role, roleAnalysis.seniorityLevel),
+        narDesignations,
+        associationRoles: [],
+        influenceScore: 0,
+        bestContactMethod: recommendContactMethod({
+          email: contact.email,
+          phone: contact.phone,
+          role: roleAnalysis.role,
+        }),
+        recentAchievements: [],
+        painPoints: [],
+        technologyStack: [],
+      };
+      
+      intelligentContacts.push(intelligentContact);
+    }
+    
+    // Determine approach order
+    const orderedContacts = determineApproachOrder(intelligentContacts);
+    console.log(`[EnhancedScraper] Identified ${orderedContacts.length} contacts with decision-maker intelligence`);
+    
+    // Update enrichedData with intelligent contacts
+    enrichedData.contacts = orderedContacts.map(ic => ({
+      name: ic.name,
+      role: ic.title || ic.detectedRole, // Map title back to role field
+      email: ic.email,
+      phone: ic.phone,
+    }));
+  }
+  
+  // Detect technology stack
+  const technologyStack = deepScrapedData?.about 
+    ? detectTechnologyStack(deepScrapedData.about)
+    : [];
+  
+  if (technologyStack.length > 0) {
+    console.log(`[EnhancedScraper] Detected technology stack: ${technologyStack.join(', ')}`);
+  }
+
+  // Step 8: Gather foot-in-the-door intelligence
+  console.log('[EnhancedScraper] Gathering foot-in-the-door intelligence');
+  let footInTheDoorIntel: FootInTheDoorIntel | null = null;
+  try {
+    footInTheDoorIntel = await gatherFootInTheDoorIntel({
+      businessName: enrichedData.name || input.name || '',
+      location: enrichedData.state || input.state,
+      websiteText: deepScrapedData?.about,
+    });
+    
+    if (footInTheDoorIntel.recentNews.length > 0 || footInTheDoorIntel.achievements.length > 0) {
+      console.log(`[EnhancedScraper] Found ${footInTheDoorIntel.recentNews.length} news items and ${footInTheDoorIntel.achievements.length} achievements`);
+    }
+  } catch (error) {
+    console.error('[EnhancedScraper] Foot-in-the-door intelligence failed:', error);
+  }
+  
+  // Step 9: Identify association leadership roles and calculate influence scores
+  console.log('[EnhancedScraper] Identifying association leadership roles');
+  for (const contact of intelligentContacts) {
+    try {
+      const associationRoles = await identifyAssociationRoles({
+        contactName: contact.name,
+        businessName: enrichedData.name,
+        location: enrichedData.state,
+      });
+      
+      if (associationRoles.length > 0) {
+        contact.associationRoles = associationRoles.map(r => `${r.position} at ${r.associationName}`);
+        
+        const influenceScore = calculateInfluenceScore({
+          associationRoles,
+          narDesignations: contact.narDesignations,
+        });
+        
+        contact.influenceScore = influenceScore.overall;
+        console.log(`[EnhancedScraper] ${contact.name} influence score: ${influenceScore.overall}`);
+      }
+    } catch (error) {
+      console.error(`[EnhancedScraper] Association role identification failed for ${contact.name}:`, error);
+    }
+  }
+
+  // Step 10: Identify MLS and association memberships
   console.log('[EnhancedScraper] Identifying MLS and association memberships');
   let mlsAssociations: MLSAssociation[] = [];
   try {

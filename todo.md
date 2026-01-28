@@ -132,3 +132,27 @@
 - [x] Show stage indicators (Searching, Scraping, Verifying, etc.)
 - [x] Add progress percentage calculation
 - [x] Test real-time updates during actual searches
+
+## Decision-Maker Intelligence System (User Priority)
+- [x] Enhanced contact role detection with LinkedIn deep scraping
+- [x] Email pattern analysis (broker@, admin@, tc@, office@)
+- [x] Email signature parsing from public sources
+- [x] Social media bio analysis for role keywords
+- [x] NAR designation detection (CRS, GRI, ABR)
+- [x] Decision-maker scoring system (0-100)
+- [x] Primary contact recommendations with approach order
+- [x] Gatekeeper detection (assistants vs decision-makers)
+- [x] Organizational hierarchy mapping with visual org chart
+- [x] Technology stack detection (current CRM/tools)
+- [x] Decision-making authority identification
+- [x] Foot-in-the-door intelligence system
+- [x] Warm intro path detection via LinkedIn
+- [x] Recent news and achievements scraping
+- [x] Pain point identification from reviews/complaints
+- [x] Best contact method recommendations
+- [x] Association leadership role detection
+- [x] MLS board position scraping
+- [x] Influence scoring based on association involvement
+- [x] Networking opportunity identification
+- [x] Update UI to display decision-maker intelligence
+- [x] Test with real brokerages
