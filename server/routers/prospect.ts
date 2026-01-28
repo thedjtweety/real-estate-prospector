@@ -10,6 +10,8 @@ import {
 } from "../db";
 import { scrapeWithEnhancements } from "../services/enhancedScraper";
 import { categorizeContactRole, detectDuplicateContact } from "../services/llmIntelligence";
+import { createProgressTracker } from "../services/progressTracker";
+import { emitProgress } from "./progress";
 
 export const prospectRouter = router({
   search: protectedProcedure
@@ -36,8 +38,16 @@ export const prospectRouter = router({
         status: "pending",
       });
 
+      // Create progress tracker
+      const progressTracker = createProgressTracker((update) => {
+        emitProgress(searchId.toString(), update);
+      });
+
       try {
+        progressTracker.startStage('Initializing search');
+        
         // Step 1: Check if business already exists in database
+        progressTracker.update('Initializing search', 'Checking existing database records...');
         const existingBusinesses = await searchBusinesses({
           name: input.name,
           phone: input.phone,
@@ -71,6 +81,9 @@ export const prospectRouter = router({
         }
 
         // Step 2: Scrape comprehensive data from multiple sources
+        progressTracker.completeStage('Initializing search', 'No existing records found');
+        progressTracker.startStage('Building intelligent queries');
+        
         const scrapedData = await scrapeWithEnhancements({
           name: input.name,
           website: input.website,
@@ -81,6 +94,9 @@ export const prospectRouter = router({
           state: input.state,
           zipCode: input.zipCode,
         });
+
+        progressTracker.completeStage('Identifying MLS associations', `Found ${scrapedData.mlsAssociations.length} MLS associations`);
+        progressTracker.startStage('Cross-referencing data');
 
         // Step 3: Create business record
         const businessId = await createBusiness({
@@ -99,6 +115,8 @@ export const prospectRouter = router({
         });
 
         // Step 4: Process and categorize contacts using LLM
+        progressTracker.update('Cross-referencing data', `Processing ${scrapedData.contacts.length} contacts...`);
+        
         for (const contact of scrapedData.contacts) {
           // Use LLM to categorize role
           const roleInfo = await categorizeContactRole({
@@ -143,6 +161,8 @@ export const prospectRouter = router({
         }
 
         // Step 5: Create MLS associations
+        progressTracker.startStage('Calculating confidence scores');
+        
         for (const mls of scrapedData.mlsAssociations) {
           await createMlsAssociation({
             businessId,
@@ -154,6 +174,7 @@ export const prospectRouter = router({
         }
 
         // Step 6: Update search record
+        progressTracker.startStage('Finalizing results');
         const processingTime = Date.now() - startTime;
         await updateSearch(searchId, {
           status: "completed",
@@ -170,6 +191,8 @@ export const prospectRouter = router({
             confidence: scrapedData.confidence,
           },
         });
+
+        progressTracker.complete();
 
         return {
           searchId,

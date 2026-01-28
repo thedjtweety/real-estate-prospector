@@ -11,6 +11,7 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { SearchProgress } from "@/components/SearchProgress";
 
 const searchSchema = z.object({
   name: z.string().optional(),
@@ -30,6 +31,7 @@ type SearchFormData = z.infer<typeof searchSchema>;
 export default function Home() {
   const [searchResult, setSearchResult] = useState<any>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [currentSearchId, setCurrentSearchId] = useState<string | null>(null);
 
   const form = useForm<SearchFormData>({
     resolver: zodResolver(searchSchema),
@@ -47,7 +49,6 @@ export default function Home() {
 
   const searchMutation = trpc.prospect.search.useMutation({
     onSuccess: async (data) => {
-      setIsSearching(false);
       toast.success("Search completed!");
       
       // Fetch full results
@@ -67,7 +68,13 @@ export default function Home() {
   const onSubmit = async (data: SearchFormData) => {
     setIsSearching(true);
     setSearchResult(null);
-    searchMutation.mutate(data);
+    setCurrentSearchId(null);
+    
+    searchMutation.mutate(data, {
+      onSuccess: (result) => {
+        setCurrentSearchId(result.searchId.toString());
+      },
+    });
   };
 
   return (
@@ -267,6 +274,16 @@ export default function Home() {
           </Form>
         </CardContent>
       </Card>
+
+      {/* Real-Time Progress */}
+      {isSearching && currentSearchId && (
+        <SearchProgress 
+          searchId={currentSearchId} 
+          onComplete={() => {
+            setIsSearching(false);
+          }}
+        />
+      )}
 
       {/* Search Results */}
       {searchResult && (
