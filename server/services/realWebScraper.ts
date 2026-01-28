@@ -7,6 +7,8 @@
 
 import axios from 'axios';
 
+import type { MLSAssociation } from './mlsIntelligence';
+
 export interface ScrapedBusinessData {
   name: string;
   phone?: string;
@@ -22,10 +24,7 @@ export interface ScrapedBusinessData {
     phone?: string;
     email?: string;
   }>;
-  mlsAssociations: Array<{
-    name: string;
-    type: 'state' | 'local';
-  }>;
+  mlsAssociations: MLSAssociation[];
   dataSources: string[];
   confidence: number;
 }
@@ -261,20 +260,16 @@ export async function scrapeBusinessData(searchParams: {
     });
   }
 
-  // Step 3: Determine MLS associations based on state
-  const mlsAssociations: Array<{ name: string, type: 'state' | 'local' }> = [];
-  if (state) {
-    mlsAssociations.push({
-      name: `${state} Association of REALTORS®`,
-      type: 'state'
-    });
-    
-    if (city) {
-      mlsAssociations.push({
-        name: `${city} Board of REALTORS®`,
-        type: 'local'
-      });
-    }
+  // Step 3: Determine MLS associations using comprehensive intelligence system
+  const { identifyMLSAssociations } = await import('./mlsIntelligence');
+  const mlsAssociations = await identifyMLSAssociations({
+    businessName,
+    city,
+    state,
+    zipCode
+  });
+  
+  if (mlsAssociations.length > 0) {
     confidence += 10;
   }
 

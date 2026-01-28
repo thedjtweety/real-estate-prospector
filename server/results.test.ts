@@ -83,7 +83,7 @@ describe("results router", () => {
     await createMlsAssociation({
       businessId: testBusinessId,
       name: "California Association of REALTORS",
-      type: "state",
+      type: "State Association",
       state: "CA",
       dataSource: "Test",
     });
@@ -91,7 +91,7 @@ describe("results router", () => {
     await createMlsAssociation({
       businessId: testBusinessId,
       name: "Los Angeles MLS",
-      type: "local",
+      type: "MLS",
       state: "CA",
       dataSource: "Test",
     });
@@ -126,8 +126,8 @@ describe("results router", () => {
     expect(result.contacts.some(c => c.name === "Jane Manager")).toBe(true);
 
     expect(result.mlsAssociations).toHaveLength(2);
-    expect(result.mlsAssociations.some(m => m.type === "state")).toBe(true);
-    expect(result.mlsAssociations.some(m => m.type === "local")).toBe(true);
+    expect(result.mlsAssociations.some(m => m.type === "State Association")).toBe(true);
+    expect(result.mlsAssociations.some(m => m.type === "MLS")).toBe(true);
   });
 
   it("retrieves business details directly", async () => {

@@ -107,3 +107,19 @@
 - [x] Add NAR directory browser automation for verification
 - [x] Build LLM-powered data inference for missing pieces
 - [x] Test with sparse inputs (email-only, phone-only, state-only)
+
+## Comprehensive MLS & Association Intelligence (User Priority)
+- [x] Build real MLS database with actual names by state/region/city/ZIP
+- [x] Add state association database (real names, not generic)
+- [x] Create local board/MLS mapping by geography
+- [x] Implement NAR directory scraping for verified memberships
+- [x] Scrape business websites for "Member of..." badges and text
+- [x] Search for "{business name} MLS" mentions
+- [x] Extract MLS from agent profiles on business websites
+- [x] Check LinkedIn company pages for association affiliations
+- [x] Build ZIP code → Local MLS mapping
+- [x] Implement city → Primary MLS lookup
+- [x] Add county-based MLS identification
+- [x] Handle multi-MLS regions (brokerages with multiple memberships)
+- [x] Create confidence scoring: Verified, High Confidence, Inferred
+- [ ] Test with real brokerages to verify accuracy

@@ -89,7 +89,7 @@ export const mlsAssociations = mysqlTable("mlsAssociations", {
   
   // Association details
   name: varchar("name", { length: 500 }).notNull(),
-  type: mysqlEnum("type", ["state", "local", "regional", "national"]).notNull(),
+  type: mysqlEnum("type", ["MLS", "State Association", "Local Board", "Regional", "National"]).notNull(),
   mlsId: varchar("mlsId", { length: 200 }),
   website: varchar("website", { length: 500 }),
   

@@ -1,0 +1,1 @@
+ALTER TABLE `mlsAssociations` MODIFY COLUMN `type` enum('MLS','State Association','Local Board','Regional','National') NOT NULL;

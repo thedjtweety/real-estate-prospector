@@ -11,6 +11,7 @@
 import axios from 'axios';
 import type { ScrapedBusinessData } from './realWebScraper';
 import { deepScrapeWebsite, scrapeNARDirectory, type DeepScrapedData } from './browserScraper';
+import { identifyMLSAssociations, type MLSAssociation } from './mlsIntelligence';
 
 /**
  * Extract domain from email address
@@ -448,22 +449,8 @@ export async function scrapeWithEnhancements(input: {
 
   // Step 3: Multi-stage enrichment
   const enrichedData = enrichDataFromResults(searchResults, input);
-
-  // Step 4: Determine MLS associations
-  const mlsAssociations: Array<{ name: string; type: 'state' | 'local' }> = [];
-  if (enrichedData.state) {
-    mlsAssociations.push({
-      name: `${enrichedData.state} Association of REALTORS®`,
-      type: 'state'
-    });
-    
-    if (enrichedData.city) {
-      mlsAssociations.push({
-        name: `${enrichedData.city} Board of REALTORS®`,
-        type: 'local'
-      });
-    }
-  }
+  
+  // Step 4: Placeholder for MLS associations (will be populated in Step 7)
 
   // Step 5: If we found a website, do deep browser scraping
   let deepScrapedData: DeepScrapedData | null = null;
@@ -518,6 +505,26 @@ export async function scrapeWithEnhancements(input: {
     } catch (error) {
       console.error('[EnhancedScraper] NAR scraping failed:', error);
     }
+  }
+
+  // Step 7: Identify MLS and association memberships
+  console.log('[EnhancedScraper] Identifying MLS and association memberships');
+  let mlsAssociations: MLSAssociation[] = [];
+  try {
+    mlsAssociations = await identifyMLSAssociations({
+      businessName: enrichedData.name,
+      city: enrichedData.city,
+      state: enrichedData.state,
+      zipCode: enrichedData.zipCode,
+      websiteText: deepScrapedData?.about
+    });
+    
+    if (mlsAssociations.length > 0) {
+      console.log(`[EnhancedScraper] Found ${mlsAssociations.length} MLS/association memberships`);
+      enrichedData.confidence = Math.min((enrichedData.confidence || 0) + 10, 95);
+    }
+  } catch (error) {
+    console.error('[EnhancedScraper] MLS identification failed:', error);
   }
 
   const finalData: ScrapedBusinessData = {
