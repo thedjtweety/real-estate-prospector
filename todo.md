@@ -499,3 +499,11 @@
 - [x] Show evidence of how each platform was detected
 - [x] Add icons for different technology categories
 - [ ] Test technology stack display with real searches
+
+## CRITICAL BUG: Placeholder Data Instead of Real Results (User Reported)
+- [x] Check server logs to see why multi-search pipeline is failing
+- [x] Debug enhancedScraper to find where it's falling back to mock data
+- [x] Fix multi-search execution and data integration
+- [x] Fix groqLLM syntax error that was crashing server
+- [x] Populate uniqueContacts from analyzed intel
+- [ ] Test with real search and confirm real data is returned

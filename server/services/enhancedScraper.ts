@@ -517,6 +517,10 @@ export async function scrapeWithEnhancements(input: {
       console.log(`[EnhancedScraper] AI analysis complete: ${analyzedIntel.decisionMakers.length} decision-makers found`);
       updateProgress('Analyzing results', `Found ${analyzedIntel.decisionMakers.length} decision-makers`);
       
+      // Populate uniqueContacts from analyzed intel
+      uniqueContacts = analyzedIntel.decisionMakers || [];
+      console.log(`[EnhancedScraper] Populated ${uniqueContacts.length} unique contacts from AI analysis`);
+      
       // Step 5: Cross-reference data for validation
       updateProgress('Cross-referencing data', 'Validating data across multiple sources...');
       crossReferenced = crossReferenceData(analyzedIntel, parallelResults);
