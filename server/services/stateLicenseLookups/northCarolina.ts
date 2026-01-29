@@ -1,28 +1,28 @@
 /**
- * California Real Estate License Lookup
+ * Northcarolina Real Estate License Lookup
  * Queries the state's real estate commission/board for broker and agent licenses
  */
 
 import { LicenseLookupResult } from './index';
 
-export async function lookupCalifornia(
+export async function lookupNorthCarolina(
   name: string,
   phone?: string,
   email?: string
 ): Promise<LicenseLookupResult> {
   try {
-    console.log(`[StateLicenseLookup] Searching California for: ${name}`);
+    console.log(`[StateLicenseLookup] Searching Northcarolina for: ${name}`);
     
     // Placeholder implementation - each state has different lookup methods
     return {
       found: false,
-      source: 'California License Lookup',
+      source: 'Northcarolina License Lookup',
     };
   } catch (error: any) {
-    console.error(`[StateLicenseLookup] California lookup failed:`, error.message);
+    console.error(`[StateLicenseLookup] Northcarolina lookup failed:`, error.message);
     return {
       found: false,
-      source: 'California License Lookup (Error)',
+      source: 'Northcarolina License Lookup (Error)',
     };
   }
 }

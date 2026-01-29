@@ -36,6 +36,8 @@ import { createProgressTracker, type ProgressCallback } from './progressTracker'
 import { extractBusinessName } from './businessNameExtractor';
 import { verifyRealEstateIndustry, isObviouslyNotRealEstate } from './industryVerifier';
 import { analyzeBusinessIntelligence } from './businessIntelligence';
+import { enrichContacts } from './contactEnrichment';
+import { lookupStateLicense } from './stateLicenseLookups';
 
 // Global progress tracker reference
 let globalProgressTracker: ReturnType<typeof createProgressTracker> | null = null;
@@ -651,6 +653,70 @@ export async function scrapeWithEnhancements(input: {
       // Don't fail the entire search if verification fails
     }
     
+
+    // Step 9: Verify with state license database
+    if (enrichedData.state && enrichedData.contacts && enrichedData.contacts.length > 0) {
+      updateProgress('Verifying licenses', 'Checking state real estate commission...');
+      
+      for (const contact of enrichedData.contacts.slice(0, 2)) {
+        try {
+          const licenseResult = await lookupStateLicense(
+            contact.name,
+            enrichedData.state,
+            contact.phone,
+            contact.email
+          );
+          
+          if (licenseResult.found) {
+            contact.licenseVerified = true;
+            contact.licenseStatus = licenseResult.licenseStatus;
+            console.log('[EnhancedScraper] License verified for:', contact.name);
+          }
+        } catch (error) {
+          console.log('[EnhancedScraper] License lookup failed for:', contact.name);
+        }
+      }
+    }
+    
+    // Step 10: Enrich contacts with email/LinkedIn/phone
+    if (enrichedData.contacts && enrichedData.contacts.length > 0) {
+      updateProgress('Enriching contacts', 'Finding email addresses and LinkedIn profiles...');
+      
+      try {
+        const enrichedContactsList = await enrichContacts(
+          enrichedData.contacts.map((c: any) => ({
+            name: c.name,
+            title: c.title,
+            company: enrichedData.name,
+            website: enrichedData.website,
+            state: enrichedData.state,
+          }))
+        );
+        
+        // Merge enriched data back
+        for (let i = 0; i < enrichedContactsList.length && i < enrichedData.contacts.length; i++) {
+          const enriched = enrichedContactsList[i];
+          const original = enrichedData.contacts[i];
+          
+          if (enriched.email && enriched.emailConfidence >= 70) {
+            original.email = enriched.email;
+          }
+          if (enriched.linkedinUrl) {
+            original.linkedinUrl = enriched.linkedinUrl;
+          }
+          if (enriched.phone && enriched.phoneConfidence >= 70 && !original.phone) {
+            original.phone = enriched.phone;
+          }
+        }
+        
+        console.log('[EnhancedScraper] Contact enrichment complete');
+        updateProgress('Enriching contacts', 'Enrichment complete');
+      } catch (error) {
+        console.error('[EnhancedScraper] Contact enrichment failed:', error);
+        updateProgress('Enriching contacts', 'Enrichment failed - continuing');
+      }
+    }
+
     // Step 8: Analyze business intelligence
     updateProgress('Analyzing business intelligence', 'Extracting technology stack and pain points...');
     
