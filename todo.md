@@ -506,3 +506,14 @@
 - [x] Add timeout to Brave Search API calls (15 seconds)
 - [x] Add timeout to DuckDuckGo search calls (15 seconds)
 - [ ] Test with real search and confirm it completes without hanging
+
+## System Refactor: 3-Stage Waterfall Approach (Claude's Recommendation)
+- [x] Simplify search pipeline from 15+ searches to 3-stage waterfall
+- [x] Stage 1: Schema.org extraction from website (fast, 95% accurate)
+- [x] Stage 2: State licensing board lookup (100% accurate government data)
+- [x] Stage 3: LLM analysis with fallback regex when LLM fails
+- [x] Add API key validation on startup
+- [x] Implement fallback regex extraction when Groq fails
+- [x] Clean LLM JSON responses wrapped in markdown code blocks
+- [x] Reduce parallel searches from 15 to 3-5 to avoid rate limits
+- [ ] Test refactored system for reliability and speed

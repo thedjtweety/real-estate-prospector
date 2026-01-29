@@ -8,7 +8,7 @@ import {
   createContact,
   createMlsAssociation,
 } from "../db";
-import { scrapeWithEnhancements, setProgressTracker } from "../services/enhancedScraper";
+import { scrapeWithWaterfall } from "../services/waterfallScraper";
 import { categorizeContactRole, detectDuplicateContact } from "../services/llmIntelligence";
 import { createProgressTracker } from "../services/progressTracker";
 import { emitProgress } from "./progress";
@@ -48,8 +48,7 @@ export const prospectRouter = router({
         console.log('[ProspectRouter] Starting fresh search for:', input);
         progressTracker.startStage('Initializing search');
         
-        // Set the global progress tracker for the scraper to use
-        setProgressTracker(progressTracker);
+
         
         // Skip database lookup - always do fresh scraping
         progressTracker.completeStage('Initializing search', 'Starting fresh search');
@@ -57,36 +56,30 @@ export const prospectRouter = router({
         
         // Add 120 second timeout to prevent hanging
         const scrapedData = await withTimeout(
-          scrapeWithEnhancements({
-            name: input.name,
-            website: input.website,
-            phone: input.phone,
-            email: input.email,
-            address: input.address,
-            city: input.city,
-            state: input.state,
-            zipCode: input.zipCode,
-          }),
+          scrapeWithWaterfall(
+            input.name || 'Unknown',
+            input.phone,
+            input.email,
+            input.state
+          ),
           120000,
-          'Multi-search intelligence gathering'
+          'Waterfall intelligence gathering'
         );
 
-        progressTracker.completeStage('Identifying MLS associations', `Found ${scrapedData.mlsAssociations.length} MLS associations`);
+        progressTracker.completeStage('Identifying MLS associations', `Waterfall analysis complete`);
         progressTracker.startStage('Cross-referencing data');
 
         // Step 3: Create business record
         const businessId = await createBusiness({
-          name: scrapedData.name,
+          name: scrapedData.businessName,
           website: scrapedData.website,
           phone: scrapedData.phone,
           email: scrapedData.email,
           address: scrapedData.address,
-          city: scrapedData.city,
           state: scrapedData.state,
-          zipCode: scrapedData.zipCode,
-          verified: scrapedData.confidence > 70,
-          verificationScore: String((scrapedData.confidence / 100).toFixed(2)), // Convert 0-100 to 0.00-1.00
-          dataSource: scrapedData.dataSources.join(", "),
+          verified: scrapedData.confidence > 0.7,
+          verificationScore: String(scrapedData.confidence.toFixed(2)),
+          dataSource: Object.keys(scrapedData.stages).filter(k => scrapedData.stages[k as keyof typeof scrapedData.stages]).join(", "),
           createdBy: ctx.user.id,
         });
 
@@ -97,8 +90,8 @@ export const prospectRouter = router({
           // Use LLM to categorize role
           const roleInfo = await categorizeContactRole({
             name: contact.name,
-            title: contact.role,
-            companyName: scrapedData.name,
+            title: contact.title,
+            companyName: scrapedData.businessName,
           });
 
           // Check for duplicates
@@ -106,7 +99,7 @@ export const prospectRouter = router({
           const duplicationCheck = await detectDuplicateContact({
             newContact: {
               name: contact.name,
-              title: contact.role,
+              title: contact.title,
               email: contact.email,
               phone: contact.phone,
             },
@@ -123,30 +116,30 @@ export const prospectRouter = router({
           await createContact({
             businessId,
             name: contact.name,
-            title: contact.role,
+            title: contact.title,
             role: roleInfo.role,
             email: contact.email || null,
             phone: contact.phone || null,
             isPrimary: roleInfo.role === "owner" || roleInfo.role === "broker",
             roleConfidence: String(roleInfo.confidence),
             inferredFrom: roleInfo.reasoning,
-            decisionMakerScore: (contact as any).decisionMakerScore || 0,
-            dataSource: scrapedData.dataSources[0] || 'web_scraping',
+            decisionMakerScore: contact.confidence || 0,
+            dataSource: 'waterfall_scraper',
             createdBy: ctx.user.id,
           });
           }
         }
 
-        // Step 5: Create MLS associations
+        // Step 5: Create MLS associations (if found)
         progressTracker.startStage('Calculating confidence scores');
         
-        for (const mls of scrapedData.mlsAssociations) {
+        if (scrapedData.mls) {
           await createMlsAssociation({
             businessId,
-            name: mls.name,
-            type: mls.type,
-            state: scrapedData.state,
-            dataSource: scrapedData.dataSources[0] || 'web_scraping',
+            name: scrapedData.mls,
+            type: 'MLS',
+            state: scrapedData.state || input.state || 'Unknown',
+            dataSource: 'waterfall_scraper',
           });
         }
 
@@ -161,10 +154,10 @@ export const prospectRouter = router({
           resultsSummary: {
             found: true,
             businessId,
-            businessName: scrapedData.name,
+            businessName: scrapedData.businessName,
             contactsFound: scrapedData.contacts.length,
-            mlsAssociationsFound: scrapedData.mlsAssociations.length,
-            sources: scrapedData.dataSources,
+            mlsAssociationsFound: scrapedData.mls ? 1 : 0,
+            sources: Object.keys(scrapedData.stages).filter(k => scrapedData.stages[k as keyof typeof scrapedData.stages]),
             confidence: scrapedData.confidence,
           },
         });
@@ -175,10 +168,10 @@ export const prospectRouter = router({
           searchId,
           found: true,
           businessId,
-          source: "web_scraping",
+          source: "waterfall_scraper",
           confidence: scrapedData.confidence,
           contactsFound: scrapedData.contacts.length,
-          mlsAssociationsFound: scrapedData.mlsAssociations.length,
+          mlsAssociationsFound: scrapedData.mls ? 1 : 0,
         };
       } catch (error) {
         // Handle errors
