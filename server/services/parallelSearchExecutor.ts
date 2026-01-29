@@ -6,6 +6,7 @@
 import { searchBrave } from './braveSearchAPI';
 import { searchDuckDuckGo } from './duckDuckGoScraper';
 import { GeneratedQuery } from './multiSearchQueryGenerator';
+import { withTimeout } from './timeoutUtil';
 
 export interface SearchResult {
   query: string;
@@ -42,9 +43,13 @@ export async function executeParallelSearches(
       }
 
       try {
-        // Try Brave first
+        // Try Brave first with 15 second timeout
         console.log(`[ParallelSearch] Searching Brave: "${generatedQuery.query}"`);
-        const braveResults = await searchBrave(generatedQuery.query);
+        const braveResults = await withTimeout(
+          searchBrave(generatedQuery.query),
+          15000,
+          `Brave search for "${generatedQuery.query}"`
+        );
         
         if (braveResults && braveResults.length > 0) {
           completed++;
@@ -65,9 +70,13 @@ export async function executeParallelSearches(
       }
 
       try {
-        // Fallback to DuckDuckGo
+        // Fallback to DuckDuckGo with 15 second timeout
         console.log(`[ParallelSearch] Searching DuckDuckGo: "${generatedQuery.query}"`);
-        const ddgResults = await searchDuckDuckGo(generatedQuery.query);
+        const ddgResults = await withTimeout(
+          searchDuckDuckGo(generatedQuery.query),
+          15000,
+          `DuckDuckGo search for "${generatedQuery.query}"`
+        );
         
         completed++;
         if (onProgress) {

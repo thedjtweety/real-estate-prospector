@@ -12,6 +12,7 @@ import { scrapeWithEnhancements, setProgressTracker } from "../services/enhanced
 import { categorizeContactRole, detectDuplicateContact } from "../services/llmIntelligence";
 import { createProgressTracker } from "../services/progressTracker";
 import { emitProgress } from "./progress";
+import { withTimeout } from "../services/timeoutUtil";
 
 export const prospectRouter = router({
   search: protectedProcedure
@@ -54,16 +55,21 @@ export const prospectRouter = router({
         progressTracker.completeStage('Initializing search', 'Starting fresh search');
         progressTracker.startStage('Building intelligent queries');
         
-        const scrapedData = await scrapeWithEnhancements({
-          name: input.name,
-          website: input.website,
-          phone: input.phone,
-          email: input.email,
-          address: input.address,
-          city: input.city,
-          state: input.state,
-          zipCode: input.zipCode,
-        });
+        // Add 120 second timeout to prevent hanging
+        const scrapedData = await withTimeout(
+          scrapeWithEnhancements({
+            name: input.name,
+            website: input.website,
+            phone: input.phone,
+            email: input.email,
+            address: input.address,
+            city: input.city,
+            state: input.state,
+            zipCode: input.zipCode,
+          }),
+          120000,
+          'Multi-search intelligence gathering'
+        );
 
         progressTracker.completeStage('Identifying MLS associations', `Found ${scrapedData.mlsAssociations.length} MLS associations`);
         progressTracker.startStage('Cross-referencing data');
