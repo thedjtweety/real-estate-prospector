@@ -239,3 +239,19 @@
 - [x] Implement waterfall strategy (Schema.org → Cheerio → Puppeteer)
 - [ ] Test with real business and measure accuracy improvement
 - [ ] Expected result: 70% → 90% accuracy, 45s → 30s per search
+
+## Phone-Only Search Not Working (User Reported)
+- [x] Check server logs and identify why phone search failed
+- [x] Identify bottleneck (area code not in hardcoded map)
+- [x] Install area code geolocation library for ALL US/Canada codes
+- [x] Replace hardcoded area code map with automatic lookup
+- [ ] Test with multiple area codes (513, 904, 310, 646, etc.)
+
+## Data Quality & Bad Lead Handling (User Requested)
+- [x] Create data quality validator module
+- [x] Filter fake/placeholder data (contact@example.com, 555-1234)
+- [x] Implement quality scoring system (0-100 per field)
+- [ ] Integrate validator into enhancedScraper
+- [ ] Add smart field prioritization based on quality scores
+- [ ] Implement cross-validation of scraped results
+- [ ] Test with bad/incomplete lead data

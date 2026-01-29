@@ -115,6 +115,9 @@ importers:
       '@trpc/server':
         specifier: ^11.6.0
         version: 11.6.0(typescript@5.9.3)
+      areacodes:
+        specifier: ^0.2.1
+        version: 0.2.1
       axios:
         specifier: ^1.12.0
         version: 1.12.2
@@ -2414,6 +2417,10 @@ packages:
     resolution: {integrity: sha512-zbB9rCJAT1rbjiVDb2hqKFHNYLxgtk8NURxZ3IZwD3F6NtxbXZQCnnSi1Lkx+IDohdPlFp222wVALIheZJQSEg==}
     engines: {node: '>=8'}
 
+  areacodes@0.2.1:
+    resolution: {integrity: sha512-5r4p9F8n4KACsU8jlRnMv0SZZGevB+AuQU/XcIQcE5mnbBZH90+nEFdE1r6E4ECrgEfX+4vYvny6y0fcSE/6Sw==}
+    engines: {node: '>=6.0.0'}
+
   argparse@2.0.1:
     resolution: {integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==}
 
@@ -2956,6 +2963,10 @@ packages:
   dotenv@17.2.3:
     resolution: {integrity: sha512-JVUnt+DUIzu87TABbhPmNfVdBDt18BLOWjMUFJMSi/Qqg7NTYtabbvSNJGOJ7afbRuv9D/lngizHtP7QyLQ+9w==}
     engines: {node: '>=12'}
+
+  doublescore@0.3.7:
+    resolution: {integrity: sha512-xyJXZWpL9XSUL/AJ/lpwrnv7zcU4OM1om/dJvsVWntlCOIvcyRajXo+uQmpW5evouYRF8IGR0Wsjhz9j4L/vbg==}
+    engines: {node: '>=0.10.0'}
 
   drizzle-kit@0.31.5:
     resolution: {integrity: sha512-+CHgPFzuoTQTt7cOYCV6MOw2w8vqEn/ap1yv4bpZOWL03u7rlVRQhUY0WYT3rHsgVTXwYQDZaSUJSQrMBUKuWg==}
@@ -7201,6 +7212,10 @@ snapshots:
     dependencies:
       color-convert: 2.0.1
 
+  areacodes@0.2.1:
+    dependencies:
+      doublescore: 0.3.7
+
   argparse@2.0.1: {}
 
   aria-hidden@1.2.6:
@@ -7757,6 +7772,8 @@ snapshots:
       domhandler: 5.0.3
 
   dotenv@17.2.3: {}
+
+  doublescore@0.3.7: {}
 
   drizzle-kit@0.31.5:
     dependencies:

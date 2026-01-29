@@ -9,6 +9,7 @@
  */
 
 import axios from 'axios';
+import areacodes from 'areacodes';
 import type { ScrapedBusinessData } from './realWebScraper';
 import { deepScrapeWebsite, scrapeNARDirectory, type DeepScrapedData } from './browserScraper';
 import { identifyMLSAssociations, type MLSAssociation } from './mlsIntelligence';
@@ -56,7 +57,8 @@ function extractDomainFromEmail(email: string): string | null {
 }
 
 /**
- * Infer location from phone number area code
+ * Infer location from phone number area code using areacodes library
+ * Supports ALL US/Canada area codes automatically
  */
 function inferLocationFromPhone(phone: string): { city?: string, state?: string } | null {
   // Remove all non-digits
@@ -66,29 +68,17 @@ function inferLocationFromPhone(phone: string): { city?: string, state?: string 
   
   const areaCode = digits.substring(0, 3);
   
-  // Area code to location mapping (sample - expand as needed)
-  const areaCodeMap: Record<string, { city: string, state: string }> = {
-    '904': { city: 'Jacksonville', state: 'FL' },
-    '305': { city: 'Miami', state: 'FL' },
-    '407': { city: 'Orlando', state: 'FL' },
-    '512': { city: 'Austin', state: 'TX' },
-    '214': { city: 'Dallas', state: 'TX' },
-    '713': { city: 'Houston', state: 'TX' },
-    '212': { city: 'New York', state: 'NY' },
-    '310': { city: 'Los Angeles', state: 'CA' },
-    '415': { city: 'San Francisco', state: 'CA' },
-    '619': { city: 'San Diego', state: 'CA' },
-    '206': { city: 'Seattle', state: 'WA' },
-    '303': { city: 'Denver', state: 'CO' },
-    '312': { city: 'Chicago', state: 'IL' },
-    '617': { city: 'Boston', state: 'MA' },
-    '404': { city: 'Atlanta', state: 'GA' },
-    '513': { city: 'Cincinnati', state: 'OH' },
-    '614': { city: 'Columbus', state: 'OH' },
-    '216': { city: 'Cleveland', state: 'OH' },
-  };
+  // Use areacodes library to lookup location (supports 300+ area codes)
+  const location = areacodes.get(areaCode);
   
-  return areaCodeMap[areaCode] || null;
+  if (location && location.state) {
+    return {
+      city: location.city || undefined,
+      state: location.state,
+    };
+  }
+  
+  return null;
 }
 
 /**
