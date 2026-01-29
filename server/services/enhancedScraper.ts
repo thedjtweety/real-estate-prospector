@@ -38,6 +38,10 @@ import { verifyRealEstateIndustry, isObviouslyNotRealEstate } from './industryVe
 import { analyzeBusinessIntelligence } from './businessIntelligence';
 import { enrichContacts } from './contactEnrichment';
 import { lookupStateLicense } from './stateLicenseLookups';
+import { generateSearchQueries, generateContactQueries, type SearchInput } from './multiSearchQueryGenerator';
+import { executeParallelSearches, aggregateSearchResults } from './parallelSearchExecutor';
+import { analyzeSearchResults, analyzeContactDetails } from './intelligentResultAnalyzer';
+import { crossReferenceData, deduplicateContacts } from './crossReferenceValidator';
 
 // Global progress tracker reference
 let globalProgressTracker: ReturnType<typeof createProgressTracker> | null = null;
@@ -421,8 +425,55 @@ export async function scrapeWithEnhancements(input: {
       };
     }
 
-    // Step 2: Perform search
-    const searchResults = await performSearch(queries, input);
+    // Step 2: Generate multi-search queries (10-15 targeted searches)
+    updateProgress('Generating search strategy', 'Creating 10-15 targeted searches...');
+    const searchInput: SearchInput = {
+      businessName: input.name,
+      phone: input.phone,
+      email: input.email,
+      city: input.city,
+      state: input.state,
+      website: input.website
+    };
+    const multiSearchQueries = generateSearchQueries(searchInput);
+    console.log(`[EnhancedScraper] Generated ${multiSearchQueries.length} targeted searches`);
+    updateProgress('Generating search strategy', `Generated ${multiSearchQueries.length} search strategies`);
+    
+    // Step 3: Execute parallel searches with progress tracking
+    updateProgress('Executing searches', 'Running searches across Brave and DuckDuckGo...');
+    const parallelResults = await executeParallelSearches(
+      multiSearchQueries,
+      (completed, total, currentQuery) => {
+        updateProgress('Executing searches', `${completed}/${total}: ${currentQuery.slice(0, 50)}...`);
+      }
+    );
+    console.log(`[EnhancedScraper] Completed ${parallelResults.length} searches`);
+    updateProgress('Executing searches', `Completed ${parallelResults.length} searches`);
+    
+    // Step 4: Analyze all results with Groq
+    updateProgress('Analyzing results', 'Using AI to extract structured intelligence...');
+    const analyzedIntel = await analyzeSearchResults(parallelResults, {
+      businessName: input.name,
+      phone: input.phone,
+      email: input.email
+    });
+    console.log(`[EnhancedScraper] AI analysis complete: ${analyzedIntel.decisionMakers.length} decision-makers found`);
+    updateProgress('Analyzing results', `Found ${analyzedIntel.decisionMakers.length} decision-makers`);
+    
+    // Step 5: Cross-reference data for validation
+    updateProgress('Cross-referencing data', 'Validating data across multiple sources...');
+    const crossReferenced = crossReferenceData(analyzedIntel, parallelResults);
+    console.log(`[EnhancedScraper] Cross-reference complete: ${crossReferenced.overallConfidence}% confidence`);
+    updateProgress('Cross-referencing data', `Validation complete: ${crossReferenced.overallConfidence}% confidence`);
+    
+    // Step 6: Deduplicate contacts
+    const uniqueContacts = deduplicateContacts(crossReferenced.decisionMakers);
+    console.log(`[EnhancedScraper] Deduplicated to ${uniqueContacts.length} unique contacts`);
+    
+    // Fallback to old method if multi-search fails
+    const searchResults = parallelResults.length > 0 
+      ? parallelResults.flatMap(pr => pr.results).slice(0, 10)
+      : await performSearch(queries, input);
     console.log(`[EnhancedScraper] Found ${searchResults.length} search results`);
 
     if (searchResults.length === 0) {
