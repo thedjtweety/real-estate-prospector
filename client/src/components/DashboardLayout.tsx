@@ -178,7 +178,7 @@ function DashboardLayoutContent({
                       Super Scrubber
                     </span>
                   </div>
-                  <p className="text-xs text-navy-600 font-medium italic pl-10">
+                  <p className="text-xs text-white/80 font-medium italic pl-10">
                     We clean up your leads... literally!
                   </p>
                 </div>

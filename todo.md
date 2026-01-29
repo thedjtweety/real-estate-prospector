@@ -428,3 +428,8 @@
 - [x] Add progress tracking for per-contact enrichment
 - [ ] Test enrichment with discovered contacts
 - [ ] Verify email, LinkedIn, and phone accuracy improvements
+
+## UI Contrast and Favicon Fixes (User Requested)
+- [x] Fix tagline contrast in sidebar (dark blue text on dark blue background)
+- [x] Add Super Scrubber logo as favicon for browser tab
+- [x] Verify all text is readable in sidebar
