@@ -124,6 +124,7 @@ export const prospectRouter = router({
             isPrimary: roleInfo.role === "owner" || roleInfo.role === "broker",
             roleConfidence: String(roleInfo.confidence),
             inferredFrom: roleInfo.reasoning,
+            decisionMakerScore: (contact as any).decisionMakerScore || 0,
             dataSource: scrapedData.dataSources[0] || 'web_scraping',
             createdBy: ctx.user.id,
           });

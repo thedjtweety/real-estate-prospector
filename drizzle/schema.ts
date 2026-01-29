@@ -66,6 +66,7 @@ export const contacts = mysqlTable("contacts", {
   // AI-powered categorization
   roleConfidence: decimal("roleConfidence", { precision: 3, scale: 2 }), // AI confidence in role assignment
   inferredFrom: text("inferredFrom"), // What data points led to this categorization
+  decisionMakerScore: int("decisionMakerScore").default(0), // 0-100 score for decision-making authority
   
   // Metadata
   isPrimary: boolean("isPrimary").default(false).notNull(), // Primary contact for business

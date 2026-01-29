@@ -563,6 +563,8 @@ export async function scrapeWithEnhancements(input: {
         role: ic.title || ic.detectedRole,
         email: ic.email,
         phone: ic.phone,
+        decisionMakerScore: ic.decisionMakerScore,
+        approachOrder: ic.approachOrder,
       }));
     }
     

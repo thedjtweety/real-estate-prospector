@@ -305,3 +305,9 @@
 - [ ] Add proper error handling for LLM failures
 - [ ] Improve contact extraction from various website structures
 - [ ] Test with small/medium/large brokerages to ensure universal compatibility
+
+## Decision-Maker Score Bug Fix (CRITICAL - User Reported)
+- [x] Add `decisionMakerScore` field to contacts table in database schema
+- [x] Update `createContact` function to accept and save decisionMakerScore
+- [x] Update prospect router to pass decisionMakerScore from scraped data to createContact
+- [ ] Verify DM scores display correctly in UI after fix
