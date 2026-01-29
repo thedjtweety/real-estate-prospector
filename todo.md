@@ -417,3 +417,14 @@
 - [x] Update UI to show Agent → Team → Brokerage hierarchy
 - [ ] Test with individual agent names and phone numbers
 - [ ] Verify brokerage affiliation detection accuracy
+
+## Contact-Specific Enrichment (User Requested)
+- [x] Create contact-specific search query generator (3-5 queries per contact)
+- [x] Build contact enrichment analyzer using Groq
+- [x] Generate queries for direct email discovery
+- [x] Generate queries for LinkedIn profile discovery
+- [x] Generate queries for mobile number discovery
+- [x] Integrate enrichment into enhancedScraper after initial contact discovery
+- [x] Add progress tracking for per-contact enrichment
+- [ ] Test enrichment with discovered contacts
+- [ ] Verify email, LinkedIn, and phone accuracy improvements

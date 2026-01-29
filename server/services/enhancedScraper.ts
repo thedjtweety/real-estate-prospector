@@ -45,6 +45,8 @@ import { crossReferenceData, deduplicateContacts } from './crossReferenceValidat
 import { detectPersonVsBusiness } from './personVsBusinessDetector';
 import { generateAgentToBrokerageQueries } from './agentToBrokerageQueries';
 import { analyzeHierarchicalRelationship, scoreHierarchicalRelationship } from './hierarchicalRelationshipAnalyzer';
+import { generateContactEnrichmentQueries } from './contactEnrichmentQueries';
+import { analyzeContactEnrichment, scoreEnrichment } from './contactEnrichmentAnalyzer';
 
 // Global progress tracker reference
 let globalProgressTracker: ReturnType<typeof createProgressTracker> | null = null;
@@ -857,43 +859,69 @@ export async function scrapeWithEnhancements(input: {
       }
     }
     
-    // Step 10: Enrich contacts with email/LinkedIn/phone
+    // Step 10: Contact-specific enrichment (3-5 searches per contact)
     if (enrichedData.contacts && enrichedData.contacts.length > 0) {
-      updateProgress('Enriching contacts', 'Finding email addresses and LinkedIn profiles...');
+      const topContacts = enrichedData.contacts.slice(0, 3); // Enrich top 3 contacts only
+      updateProgress('Enriching contacts', `Deep-diving ${topContacts.length} key contacts...`);
       
-      try {
-        const enrichedContactsList = await enrichContacts(
-          enrichedData.contacts.map((c: any) => ({
-            name: c.name,
-            title: c.title,
+      for (let i = 0; i < topContacts.length; i++) {
+        const contact = topContacts[i];
+        updateProgress('Enriching contacts', `[${i + 1}/${topContacts.length}] Enriching ${contact.name}...`);
+        
+        try {
+          // Generate 3-5 targeted searches for this specific contact
+          const enrichmentQueries = generateContactEnrichmentQueries({
+            name: contact.name,
+            title: contact.title,
             company: enrichedData.name,
-            website: enrichedData.website,
+            city: enrichedData.city,
             state: enrichedData.state,
-          }))
-        );
-        
-        // Merge enriched data back
-        for (let i = 0; i < enrichedContactsList.length && i < enrichedData.contacts.length; i++) {
-          const enriched = enrichedContactsList[i];
-          const original = enrichedData.contacts[i];
+            existingEmail: contact.email,
+            existingPhone: contact.phone,
+            existingLinkedIn: contact.linkedinUrl
+          });
           
-          if (enriched.email && enriched.emailConfidence >= 70) {
-            original.email = enriched.email;
+          console.log(`[EnhancedScraper] Generated ${enrichmentQueries.length} enrichment queries for ${contact.name}`);
+          
+          // Execute searches for this contact
+          const contactSearchResults = await executeParallelSearches(
+            enrichmentQueries,
+            (completed, total) => {
+              updateProgress('Enriching contacts', `[${i + 1}/${topContacts.length}] ${contact.name}: ${completed}/${total} searches`);
+            }
+          );
+          
+          // Analyze results to extract contact info
+          const contactEnrichment = await analyzeContactEnrichment(contactSearchResults, {
+            name: contact.name,
+            company: enrichedData.name,
+            title: contact.title
+          });
+          
+          // Merge enriched data (only if confidence is high)
+          if (contactEnrichment.email && contactEnrichment.emailConfidence >= 70 && !contact.email) {
+            contact.email = contactEnrichment.email;
+            console.log(`[EnhancedScraper] Found email for ${contact.name}: ${contactEnrichment.email}`);
           }
-          if (enriched.linkedinUrl) {
-            original.linkedinUrl = enriched.linkedinUrl;
+          if (contactEnrichment.phone && contactEnrichment.phoneConfidence >= 70 && !contact.phone) {
+            contact.phone = contactEnrichment.phone;
+            console.log(`[EnhancedScraper] Found phone for ${contact.name}: ${contactEnrichment.phone}`);
           }
-          if (enriched.phone && enriched.phoneConfidence >= 70 && !original.phone) {
-            original.phone = enriched.phone;
+          if (contactEnrichment.linkedinUrl && contactEnrichment.linkedinConfidence >= 70 && !contact.linkedinUrl) {
+            contact.linkedinUrl = contactEnrichment.linkedinUrl;
+            console.log(`[EnhancedScraper] Found LinkedIn for ${contact.name}`);
           }
+          
+          const enrichmentScore = scoreEnrichment(contactEnrichment);
+          console.log(`[EnhancedScraper] Enrichment score for ${contact.name}: ${enrichmentScore}`);
+          
+        } catch (error: any) {
+          console.error(`[EnhancedScraper] Enrichment failed for ${contact.name}:`, error.message);
         }
-        
-        console.log('[EnhancedScraper] Contact enrichment complete');
-        updateProgress('Enriching contacts', 'Enrichment complete');
-      } catch (error) {
-        console.error('[EnhancedScraper] Contact enrichment failed:', error);
-        updateProgress('Enriching contacts', 'Enrichment failed - continuing');
       }
+      
+      console.log('[EnhancedScraper] Contact-specific enrichment complete');
+      updateProgress('Enriching contacts', 'Enrichment complete');
     }
 
     // Step 8: Analyze business intelligence
