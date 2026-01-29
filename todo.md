@@ -433,3 +433,9 @@
 - [x] Fix tagline contrast in sidebar (dark blue text on dark blue background)
 - [x] Add Super Scrubber logo as favicon for browser tab
 - [x] Verify all text is readable in sidebar
+
+## Industry Verification Bug Fix (User Reported)
+- [x] Check server logs to understand why RE/MAX is being rejected
+- [x] Fix industry verification logic to be more lenient for real estate businesses
+- [x] Ensure verification doesn't fail the entire search on error
+- [ ] Test with RE/MAX SUNDANCE REALTY II

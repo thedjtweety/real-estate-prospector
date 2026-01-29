@@ -801,7 +801,7 @@ export async function scrapeWithEnhancements(input: {
       };
     }
     
-    // Use Groq for intelligent industry verification
+    // Use Groq for intelligent industry verification (lenient - only reject if confident it's NOT real estate)
     try {
       const industryCheck = await verifyRealEstateIndustry({
         name: enrichedData.name,
@@ -809,8 +809,9 @@ export async function scrapeWithEnhancements(input: {
         description: searchResults[0]?.snippet,
       });
       
-      if (!industryCheck.isRealEstate) {
-        console.log('[EnhancedScraper] Industry verification failed:', industryCheck.reason);
+      // Only reject if we're VERY confident it's not real estate (confidence >= 80%)
+      if (!industryCheck.isRealEstate && industryCheck.confidence >= 80) {
+        console.log('[EnhancedScraper] High-confidence non-real-estate business:', industryCheck.reason);
         updateProgress('Verifying industry', `Not real estate: ${industryCheck.reason}`);
         return {
           name: enrichedData.name,
@@ -821,12 +822,18 @@ export async function scrapeWithEnhancements(input: {
         };
       }
       
-      console.log('[EnhancedScraper] Industry verified:', industryCheck.reason);
-      updateProgress('Verifying industry', `Confirmed real estate business (${industryCheck.confidence}% confidence)`);
-      
-      // Boost confidence if industry is verified with high confidence
-      if (industryCheck.confidence >= 80) {
-        enrichedData.confidence = Math.min(enrichedData.confidence + 10, 95);
+      if (industryCheck.isRealEstate) {
+        console.log('[EnhancedScraper] Industry verified:', industryCheck.reason);
+        updateProgress('Verifying industry', `Confirmed real estate business (${industryCheck.confidence}% confidence)`);
+        
+        // Boost confidence if industry is verified with high confidence
+        if (industryCheck.confidence >= 80) {
+          enrichedData.confidence = Math.min(enrichedData.confidence + 10, 95);
+        }
+      } else {
+        // Low confidence rejection - continue anyway (assume real estate unless proven otherwise)
+        console.log('[EnhancedScraper] Uncertain industry classification - continuing anyway');
+        updateProgress('Verifying industry', 'Industry uncertain - proceeding with search');
       }
     } catch (error) {
       console.error('[EnhancedScraper] Industry verification failed:', error);
