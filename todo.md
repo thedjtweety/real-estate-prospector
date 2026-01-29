@@ -454,6 +454,6 @@
 ## Retry Logic for Fresh Searches (User Requested)
 - [x] Implement retry logic with exponential backoff (1-2 retries)
 - [x] Add retry wrapper for Brave search API calls
-- [ ] Add retry wrapper for Groq LLM calls
-- [ ] Test retry logic with simulated API failures
-- [ ] Verify fresh searches always run (no caching)
+- [x] Add retry wrapper for Groq LLM calls
+- [ ] Test Groq retry logic with simulated API failures
+- [x] Verify fresh searches always run (no caching)

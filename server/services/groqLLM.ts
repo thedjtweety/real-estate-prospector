@@ -9,6 +9,7 @@
  */
 
 import axios from 'axios';
+import { withRetry } from './retryUtil';
 
 export interface GroqMessage {
   role: 'system' | 'user' | 'assistant';
@@ -55,21 +56,24 @@ export async function invokeGroq(params: {
   try {
     console.log(`[Groq] Calling ${model} with ${messages.length} messages`);
     
-    const response = await axios.post(
-      'https://api.groq.com/openai/v1/chat/completions',
-      {
-        model,
-        messages,
-        temperature,
-        max_tokens,
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
+    // Wrap API call with retry logic
+    const response = await withRetry(
+      () => axios.post(
+        'https://api.groq.com/openai/v1/chat/completions',
+        {
+          model,
+          messages,
+          temperature,
+          max_tokens,
         },
-        timeout: 30000, // 30 second timeout
-      }
+        {
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          timeout: 30000, // 30 second timeout
+        }
+      )
     );
 
     console.log(`[Groq] Response received (${response.data.usage.total_tokens} tokens)`);
