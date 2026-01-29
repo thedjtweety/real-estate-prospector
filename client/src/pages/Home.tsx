@@ -12,6 +12,7 @@ import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Separator } from "@/components/ui/separator";
 import { SearchProgress } from "@/components/SearchProgress";
+import { TechnologyStack } from "@/components/TechnologyStack";
 
 const searchSchema = z.object({
   name: z.string().optional(),
@@ -609,6 +610,16 @@ export default function Home() {
                 </div>
               </CardContent>
             </Card>
+          )}
+
+          {/* Technology Stack */}
+          {searchResult.technologyStack && (
+            <TechnologyStack
+              technologies={searchResult.technologyStack.detectedTechnologies}
+              topTechnologies={searchResult.technologyStack.topTechnologies}
+              overallConfidence={searchResult.technologyStack.overallConfidence}
+              summary={searchResult.technologyStack.summary}
+            />
           )}
 
           {/* Possibly Related */}

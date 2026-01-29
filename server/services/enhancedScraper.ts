@@ -47,6 +47,7 @@ import { generateAgentToBrokerageQueries } from './agentToBrokerageQueries';
 import { analyzeHierarchicalRelationship, scoreHierarchicalRelationship } from './hierarchicalRelationshipAnalyzer';
 import { generateContactEnrichmentQueries } from './contactEnrichmentQueries';
 import { analyzeContactEnrichment, scoreEnrichment } from './contactEnrichmentAnalyzer';
+import { analyzeBrokerageTechnologyStack, type TechnologyStackProfile } from './technologyDetectionIntegration';
 
 // Global progress tracker reference
 let globalProgressTracker: ReturnType<typeof createProgressTracker> | null = null;
@@ -409,7 +410,7 @@ export async function scrapeWithEnhancements(input: {
   city?: string;
   state?: string;
   zipCode?: string;
-}): Promise<ScrapedBusinessData> {
+}): Promise<ScrapedBusinessData & { technologyStack?: any }> {
   try {
     console.log('[EnhancedScraper] Starting comprehensive scrape');
     updateProgress('Analyzing input', 'Determining search type...');
@@ -931,8 +932,26 @@ export async function scrapeWithEnhancements(input: {
       updateProgress('Enriching contacts', 'Enrichment complete');
     }
 
-    // Step 8: Analyze business intelligence
-    updateProgress('Analyzing business intelligence', 'Extracting technology stack and pain points...');
+    // Step 8: Analyze technology stack
+    updateProgress('Analyzing technology stack', 'Detecting CRM and transaction management platforms...');
+    
+    let technologyStack: TechnologyStackProfile | null = null;
+    try {
+      technologyStack = await analyzeBrokerageTechnologyStack(
+        enrichedData.website,
+        [] // Job postings would be gathered separately
+      );
+      
+      console.log('[EnhancedScraper] Technology stack analysis complete');
+      console.log('[EnhancedScraper] Detected technologies:', technologyStack.topTechnologies);
+      updateProgress('Analyzing technology stack', `Found ${technologyStack.topTechnologies.length} technologies`);
+    } catch (error) {
+      console.error('[EnhancedScraper] Technology stack analysis failed:', error);
+      updateProgress('Analyzing technology stack', 'Analysis failed - continuing');
+    }
+    
+    // Step 9: Analyze business intelligence
+    updateProgress('Analyzing business intelligence', 'Extracting pain points and insights...');
     
     let businessIntel: any = null;
     try {
@@ -968,7 +987,8 @@ export async function scrapeWithEnhancements(input: {
       contacts: enrichedData.contacts || [],
       mlsAssociations,
       dataSources: enrichedData.dataSources || ['Google Search'],
-      confidence: enrichedData.confidence || 0
+      confidence: enrichedData.confidence || 0,
+      technologyStack: technologyStack || undefined
     };
 
     console.log(`[EnhancedScraper] Scraping complete. Confidence: ${finalData.confidence}%`);

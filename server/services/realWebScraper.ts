@@ -27,6 +27,7 @@ export interface ScrapedBusinessData {
   mlsAssociations: MLSAssociation[];
   dataSources: string[];
   confidence: number;
+  technologyStack?: any;
 }
 
 /**
