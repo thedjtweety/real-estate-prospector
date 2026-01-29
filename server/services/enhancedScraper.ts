@@ -9,7 +9,7 @@
  */
 
 import axios from 'axios';
-import areacodes from 'areacodes';
+import { getLocationFromAreaCode } from './areaCodeMap';
 import type { ScrapedBusinessData } from './realWebScraper';
 import { deepScrapeWebsite, scrapeNARDirectory, type DeepScrapedData } from './browserScraper';
 import { identifyMLSAssociations, type MLSAssociation } from './mlsIntelligence';
@@ -68,8 +68,8 @@ function inferLocationFromPhone(phone: string): { city?: string, state?: string 
   
   const areaCode = digits.substring(0, 3);
   
-  // Use areacodes library to lookup location (supports 300+ area codes)
-  const location = areacodes.get(areaCode);
+  // Use custom area code map to lookup location (supports 300+ area codes)
+  const location = getLocationFromAreaCode(areaCode);
   
   if (location && location.state) {
     return {

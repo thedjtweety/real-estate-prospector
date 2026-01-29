@@ -191,8 +191,8 @@ export const prospectRouter = router({
   detectLocation: publicProcedure
     .input(z.object({ phone: z.string() }))
     .query(async ({ input }: { input: { phone: string } }) => {
-      // Import areacodes dynamically
-      const areacodes = (await import('areacodes')).default;
+      // Import custom area code map
+      const { getLocationFromAreaCode } = await import('../services/areaCodeMap');
       
       const digits = input.phone.replace(/\D/g, '');
       if (digits.length < 10) {
@@ -200,7 +200,7 @@ export const prospectRouter = router({
       }
       
       const areaCode = digits.substring(0, 3);
-      const location = areacodes.get(areaCode);
+      const location = getLocationFromAreaCode(areaCode);
       
       if (location && location.state) {
         return {

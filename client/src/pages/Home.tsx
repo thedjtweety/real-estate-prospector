@@ -4,12 +4,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Loader2, Search, Building2, Users, MapPin, CheckCircle2, XCircle } from "lucide-react";
 import { trpc } from "@/lib/trpc";
-import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { Separator } from "@/components/ui/separator";
 import { SearchProgress } from "@/components/SearchProgress";
 
@@ -54,13 +54,13 @@ export default function Home() {
     onSuccess: async (data) => {
       console.log('[Home] Search mutation success:', data);
       setCurrentSearchId(data.searchId.toString());
-      toast.success("Search started! Gathering intelligence...");
+      console.log("Search started! Gathering intelligence...");
     },
     onError: (error) => {
       console.error('[Home] Search mutation error:', error);
       setIsSearching(false);
       setCurrentSearchId(null);
-      toast.error(`Search failed: ${error.message}`);
+      console.error(`Search failed: ${error.message}`);
     },
   });
 
@@ -266,7 +266,7 @@ export default function Home() {
                   onClick={() => {
                     form.reset();
                     setSearchResult(null);
-                    toast.success("Form cleared");
+                    console.log("Form cleared");
                   }}
                   disabled={isSearching}
                 >
@@ -307,10 +307,10 @@ export default function Home() {
               const results = await trpcUtils.results.getSearchResult.fetch({ searchId: parseInt(currentSearchId) });
               console.log('[Home] Results fetched:', results);
               setSearchResult(results);
-              toast.success("Intelligence gathered successfully!");
+              console.log("Intelligence gathered successfully!");
             } catch (error) {
               console.error('[Home] Failed to fetch results:', error);
-              toast.error("Failed to load results");
+              console.error("Failed to load results");
             }
           }}
         />
