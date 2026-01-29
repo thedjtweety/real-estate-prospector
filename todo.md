@@ -311,3 +311,18 @@
 - [x] Update `createContact` function to accept and save decisionMakerScore
 - [x] Update prospect router to pass decisionMakerScore from scraped data to createContact
 - [ ] Verify DM scores display correctly in UI after fix
+
+## Top 10 State License Lookups (60% Market Coverage)
+- [x] Research lookup URLs and methods for all 10 states
+- [x] Florida - Build license lookup module (from earlier work)
+- [x] California - Build license lookup module (90% complete)
+- [ ] Texas - Build license lookup module
+- [ ] New York - Build license lookup module
+- [ ] Pennsylvania - Build license lookup module
+- [ ] Illinois - Build license lookup module
+- [ ] Ohio - Build license lookup module
+- [ ] Georgia - Build license lookup module
+- [ ] North Carolina - Build license lookup module
+- [ ] Michigan - Build license lookup module
+- [ ] Integrate state lookups into enhancedScraper
+- [ ] Test with brokerages from each state
