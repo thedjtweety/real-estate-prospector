@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { protectedProcedure, router } from "../_core/trpc";
+import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import {
   createBusiness,
   createSearch,
@@ -186,5 +186,32 @@ export const prospectRouter = router({
 
         throw error;
       }
+    }),
+
+  detectLocation: publicProcedure
+    .input(z.object({ phone: z.string() }))
+    .query(async ({ input }: { input: { phone: string } }) => {
+      // Import areacodes dynamically
+      const areacodes = (await import('areacodes')).default;
+      
+      const digits = input.phone.replace(/\D/g, '');
+      if (digits.length < 10) {
+        return { location: null };
+      }
+      
+      const areaCode = digits.substring(0, 3);
+      const location = areacodes.get(areaCode);
+      
+      if (location && location.state) {
+        return {
+          location: {
+            city: location.city || null,
+            state: location.state,
+            areaCode,
+          },
+        };
+      }
+      
+      return { location: null };
     }),
 });

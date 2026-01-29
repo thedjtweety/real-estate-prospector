@@ -255,3 +255,10 @@
 - [ ] Add smart field prioritization based on quality scores
 - [ ] Implement cross-validation of scraped results
 - [ ] Test with bad/incomplete lead data
+
+## Display Detected Location Badge (User Requested)
+- [x] Add tRPC endpoint to detect location from phone number
+- [x] Update frontend to call detection when phone field changes
+- [x] Show "📍 Detected: City, ST" badge below phone field
+- [x] Add smooth animation when badge appears
+- [ ] Test with multiple phone numbers

@@ -32,6 +32,7 @@ export default function Home() {
   const [searchResult, setSearchResult] = useState<any>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [currentSearchId, setCurrentSearchId] = useState<string | null>(null);
+  const [phoneValue, setPhoneValue] = useState("");
 
   const form = useForm<SearchFormData>({
     resolver: zodResolver(searchSchema),
@@ -131,15 +132,40 @@ export default function Home() {
                 <FormField
                   control={form.control}
                   name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Phone Number</FormLabel>
-                      <FormControl>
-                        <Input placeholder="(555) 123-4567" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    const { data: locationData } = trpc.prospect.detectLocation.useQuery(
+                      { phone: phoneValue },
+                      { enabled: phoneValue.length >= 10 }
+                    );
+                    
+                    return (
+                      <FormItem>
+                        <FormLabel>Phone Number</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="(555) 123-4567" 
+                            {...field}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              setPhoneValue(e.target.value);
+                            }}
+                          />
+                        </FormControl>
+                        {locationData?.location && (
+                          <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground animate-in fade-in slide-in-from-top-1 duration-300">
+                            <MapPin className="h-4 w-4 text-primary" />
+                            <span>
+                              Detected: {locationData.location.city ? `${locationData.location.city}, ` : ''}{locationData.location.state}
+                            </span>
+                            <Badge variant="outline" className="text-xs">
+                              Area Code: {locationData.location.areaCode}
+                            </Badge>
+                          </div>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
 
                 <FormField
