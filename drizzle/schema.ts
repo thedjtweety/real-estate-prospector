@@ -190,3 +190,4 @@ export const savedSearchCriteria = mysqlTable("savedSearchCriteria", {
 
 export type SavedSearchCriteria = typeof savedSearchCriteria.$inferSelect;
 export type InsertSavedSearchCriteria = typeof savedSearchCriteria.$inferInsert;
+

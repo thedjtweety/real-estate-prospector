@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { withRetry } from './retryUtil';
 
 /**
  * Brave Search API Integration
@@ -30,20 +31,23 @@ export async function searchBrave(query: string): Promise<BraveSearchResult[]> {
   try {
     console.log(`[BraveSearch] Searching for: ${query}`);
     
-    const response = await axios.get('https://api.search.brave.com/res/v1/web/search', {
-      params: {
-        q: query,
-        count: 10, // Number of results (max 20)
-        search_lang: 'en',
-        country: 'US',
-      },
-      headers: {
-        'Accept': 'application/json',
-        'Accept-Encoding': 'gzip',
-        'X-Subscription-Token': apiKey,
-      },
-      timeout: 10000,
-    });
+    // Wrap API call with retry logic
+    const response = await withRetry(
+      () => axios.get('https://api.search.brave.com/res/v1/web/search', {
+        params: {
+          q: query,
+          count: 10, // Number of results (max 20)
+          search_lang: 'en',
+          country: 'US',
+        },
+        headers: {
+          'Accept': 'application/json',
+          'Accept-Encoding': 'gzip',
+          'X-Subscription-Token': apiKey,
+        },
+        timeout: 10000,
+      })
+    );
 
     if (!response.data || !response.data.web || !response.data.web.results) {
       console.log('[BraveSearch] No results found in API response');

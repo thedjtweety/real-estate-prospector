@@ -439,3 +439,21 @@
 - [x] Fix industry verification logic to be more lenient for real estate businesses
 - [x] Ensure verification doesn't fail the entire search on error
 - [ ] Test with RE/MAX SUNDANCE REALTY II
+
+## Retry Logic and Result Caching (User Requested)
+- [ ] Create database schema for search result caching (searchCache table)
+- [ ] Implement retry logic with exponential backoff (1-2 retries)
+- [ ] Add retry wrapper for Brave search API calls
+- [ ] Add retry wrapper for Groq LLM calls
+- [ ] Implement cache lookup before search execution (check by search input hash)
+- [ ] Implement cache storage after successful search (24-hour TTL)
+- [ ] Add cache hit/miss tracking in UI
+- [ ] Test retry logic with simulated API failures
+- [ ] Test caching with repeated searches
+
+## Retry Logic for Fresh Searches (User Requested)
+- [x] Implement retry logic with exponential backoff (1-2 retries)
+- [x] Add retry wrapper for Brave search API calls
+- [ ] Add retry wrapper for Groq LLM calls
+- [ ] Test retry logic with simulated API failures
+- [ ] Verify fresh searches always run (no caching)
