@@ -478,3 +478,15 @@
 - [x] Implement DE (Delaware) state lookup
 - [ ] Test all state lookups with sample brokerages
 - [ ] Verify 70%+ US coverage with state expansion
+
+## Technology Stack Detection (User Requested)
+- [x] Create transaction management platform database with keywords and identifiers
+- [x] Build website technology analyzer to detect CRM/MLS platforms
+- [x] Build job posting technology analyzer to detect required technologies
+- [x] Implement website scraping for company tech stack detection
+- [x] Implement LinkedIn job posting analysis for technology requirements
+- [x] Integrate technology detection into search pipeline
+- [x] Add confidence scoring for detected technologies
+- [ ] Display detected technologies in results UI
+- [ ] Test technology detection with sample brokerages
+- [ ] Verify accuracy of detected transaction management platforms
