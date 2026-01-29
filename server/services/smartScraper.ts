@@ -11,6 +11,7 @@
 
 import axios from 'axios';
 import * as cheerio from 'cheerio';
+import { isValidName, extractValidNames, scoreNameQuality } from './nameValidator';
 
 // Types
 export interface ExtractedContact {
@@ -188,6 +189,19 @@ async function extractWithCheerio(url: string): Promise<Partial<ExtractedBusines
         const name = match[1];
         const role = match[2];
         
+        // Validate name before adding
+        if (!isValidName(name)) {
+          console.log(`[CheerioScraper] Rejected invalid name: "${name}"`);
+          return;
+        }
+        
+        // Score name quality
+        const nameScore = scoreNameQuality(name);
+        if (nameScore < 50) {
+          console.log(`[CheerioScraper] Rejected low-quality name: "${name}" (score: ${nameScore})`);
+          return;
+        }
+        
         // Try to find email/phone near this name
         const contextStart = Math.max(0, match.index! - 200);
         const contextEnd = Math.min(sectionText.length, match.index! + 200);
@@ -201,7 +215,7 @@ async function extractWithCheerio(url: string): Promise<Partial<ExtractedBusines
           role,
           email: emailMatch ? emailMatch[0] : undefined,
           phone: phoneMatch ? phoneMatch[0] : undefined,
-          confidence: 0.75,
+          confidence: nameScore / 100,
           source: 'HTML Parsing'
         });
       });

@@ -269,3 +269,39 @@
 - [x] Correct import syntax in enhancedScraper.ts
 - [x] Correct import syntax in prospect.ts detectLocation endpoint
 - [ ] Test location detection works without errors
+
+## Web Scraping Returns No Real Data (User Reported - CRITICAL)
+- [ ] Check server logs for scraping execution
+- [ ] Identify why Google search returns no results for "Keller Williams Realty (513) 871-4040"
+- [ ] Fix directWebScraper or smartScraper implementation
+- [ ] Verify Schema.org extraction is working
+- [ ] Test with real business and confirm actual contact data is returned
+
+## Phase 1: Free Optimization - Zero Cost Data Sources (NO LLM)
+- [x] Sign up for Brave Search API (2,000 free searches/month, no credit card)
+- [x] Replace directWebScraper Google scraping with Brave Search API
+- [x] Add DuckDuckGo HTML scraping as unlimited free fallback
+- [x] Prioritize Schema.org extraction to run FIRST in waterfall (already implemented in smartScraper)
+- [x] Build Florida state license lookup as proof-of-concept (100% accurate government data)
+- [x] Update enhancedScraper to use new free data sources in order: Brave → DuckDuckGo → Schema.org (already integrated)
+- [ ] Remove all LLM/Manus API calls to avoid credit costs
+- [ ] Test end-to-end with phone "(513) 871-4040" - should identify brokerage and decision-makers
+- [ ] Verify 0 results bug is fixed with new search engines
+
+## Groq Free LLM Integration (User Requested)
+- [x] Add Groq API key to environment variables
+- [x] Create Groq LLM wrapper compatible with existing invokeLLM interface
+- [x] Replace Manus LLM calls with Groq in llmIntelligence.ts
+- [ ] Replace Manus API calls with Groq in footInTheDoorIntelligence.ts
+- [ ] Replace Manus API calls with Groq in associationLeadershipIntel.ts
+- [ ] Test LLM analysis works with Groq (14,400 free requests/day)
+
+## Data Extraction Quality Improvements (User Reported - CRITICAL)
+- [ ] Fix business name extraction (currently shows "Unknown Business")
+- [ ] Improve Cheerio selectors for clean address extraction (remove garbage text)
+- [x] Add contact name validation to filter fragments ("as equal", "the new", etc.)
+- [x] Implement text quality scoring to reject non-name strings
+- [ ] Fix Groq LLM decision-maker analysis (currently returns 0 scores)
+- [ ] Add proper error handling for LLM failures
+- [ ] Improve contact extraction from various website structures
+- [ ] Test with small/medium/large brokerages to ensure universal compatibility

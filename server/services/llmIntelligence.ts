@@ -1,4 +1,5 @@
-import { invokeLLM } from "../_core/llm";
+// Replaced Manus LLM with Groq (free: 14,400 requests/day)
+import { invokeGroq, parseJSONFromLLM } from "./groqLLM";
 
 export interface ContactMatch {
   name: string;
@@ -51,31 +52,13 @@ Respond in JSON format:
 }`;
 
   try {
-    const response = await invokeLLM({
+    // Note: Groq doesn't support response_format with json_schema, using prompt engineering instead
+    const response = await invokeGroq({
       messages: [
-        { role: "system", content: "You are an expert at analyzing real estate business contacts and categorizing their roles." },
+        { role: "system", content: "You are an expert at analyzing real estate business contacts and categorizing their roles. Always respond with valid JSON only, no markdown." },
         { role: "user", content: prompt },
       ],
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "contact_role_categorization",
-          strict: true,
-          schema: {
-            type: "object",
-            properties: {
-              role: {
-                type: "string",
-                enum: ["broker", "owner", "office_manager", "admin", "transaction_coordinator", "technology_poc", "other"],
-              },
-              confidence: { type: "number" },
-              reasoning: { type: "string" },
-            },
-            required: ["role", "confidence", "reasoning"],
-            additionalProperties: false,
-          },
-        },
-      },
+      temperature: 0.1,
     });
 
     const content = response.choices[0]?.message?.content;
@@ -83,7 +66,7 @@ Respond in JSON format:
       throw new Error("No response from LLM");
     }
 
-    const result = JSON.parse(content as string);
+    const result = parseJSONFromLLM(content);
     return result;
   } catch (error) {
     console.error("LLM categorization error:", error);
@@ -171,29 +154,12 @@ Respond in JSON format:
 }`;
 
   try {
-    const response = await invokeLLM({
+    const response = await invokeGroq({
       messages: [
-        { role: "system", content: "You are an expert at detecting duplicate contacts and matching people across different data sources." },
+        { role: "system", content: "You are an expert at detecting duplicate contacts and matching people across different data sources. Always respond with valid JSON only, no markdown." },
         { role: "user", content: prompt },
       ],
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "duplicate_detection",
-          strict: true,
-          schema: {
-            type: "object",
-            properties: {
-              isDuplicate: { type: "boolean" },
-              confidence: { type: "number" },
-              reasoning: { type: "string" },
-              matchedContactId: { type: ["number", "null"] },
-            },
-            required: ["isDuplicate", "confidence", "reasoning", "matchedContactId"],
-            additionalProperties: false,
-          },
-        },
-      },
+      temperature: 0.1,
     });
 
     const content = response.choices[0]?.message?.content;
@@ -201,7 +167,7 @@ Respond in JSON format:
       throw new Error("No response from LLM");
     }
 
-    const result = JSON.parse(content as string);
+    const result = parseJSONFromLLM(content);
     return result;
   } catch (error) {
     console.error("LLM deduplication error:", error);
@@ -310,29 +276,12 @@ Respond in JSON format:
 }`;
 
   try {
-    const response = await invokeLLM({
+    const response = await invokeGroq({
       messages: [
-        { role: "system", content: "You are an expert at inferring contact information based on partial data and common patterns." },
+        { role: "system", content: "You are an expert at inferring contact information based on partial data and common patterns. Always respond with valid JSON only, no markdown." },
         { role: "user", content: prompt },
       ],
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "infer_contact_details",
-          strict: true,
-          schema: {
-            type: "object",
-            properties: {
-              inferredEmail: { type: ["string", "null"] },
-              inferredPhone: { type: ["string", "null"] },
-              confidence: { type: "number" },
-              reasoning: { type: "string" },
-            },
-            required: ["inferredEmail", "inferredPhone", "confidence", "reasoning"],
-            additionalProperties: false,
-          },
-        },
-      },
+      temperature: 0.1,
     });
 
     const content = response.choices[0]?.message?.content;
@@ -340,7 +289,7 @@ Respond in JSON format:
       throw new Error("No response from LLM");
     }
 
-    const result = JSON.parse(content as string);
+    const result = parseJSONFromLLM(content);
     return result;
   } catch (error) {
     console.error("LLM inference error:", error);

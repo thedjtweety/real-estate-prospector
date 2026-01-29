@@ -160,18 +160,35 @@ async function performSearch(queries: string[], businessInput: any): Promise<any
     
     // Import smart scraper with Schema.org support
     const { smartScrapeWebsite } = await import('./smartScraper');
-    const { searchGoogle } = await import('./directWebScraper');
+    // Use Brave Search API (2,000 free/month) with DuckDuckGo fallback (unlimited)
+    const { searchBusinessBrave } = await import('./braveSearchAPI');
+    const { searchBusinessDDG } = await import('./duckDuckGoScraper');
     
     // Build location string
     const location = [businessInput.city, businessInput.state].filter(Boolean).join(', ');
     const searchQuery = location ? `${businessInput.name} ${location}` : businessInput.name || queries[0];
     
-    // First, search Google to find the business website
-    updateProgress('Searching Google', `Finding website for: ${searchQuery}`);
-    const googleResults = await searchGoogle(searchQuery);
+    // First, try Brave Search API (free tier: 2,000/month)
+    updateProgress('Searching', `Finding website for: ${searchQuery}`);
+    let searchResults = await searchBusinessBrave(
+      businessInput.name || '',
+      location,
+      businessInput.phone
+    );
     
-    if (googleResults.length === 0) {
-      updateProgress('Searching Google', 'No results found');
+    // If Brave fails or returns no results, fallback to DuckDuckGo (unlimited)
+    if (searchResults.length === 0) {
+      console.log('[EnhancedScraper] Brave returned no results, trying DuckDuckGo fallback');
+      updateProgress('Searching', 'Trying DuckDuckGo fallback...');
+      searchResults = await searchBusinessDDG(
+        businessInput.name || '',
+        location,
+        businessInput.phone
+      );
+    }
+    
+    if (searchResults.length === 0) {
+      updateProgress('Searching', 'No results found from any search engine');
       return [{
         title: `${businessInput.name || 'Business'} - No results`,
         url: businessInput.website || 'https://example.com',
@@ -180,8 +197,8 @@ async function performSearch(queries: string[], businessInput: any): Promise<any
     }
     
     // Get the top result URL (most likely the business website)
-    const businessUrl = googleResults[0].url;
-    updateProgress('Searching Google', `Found website: ${businessUrl}`);
+    const businessUrl = searchResults[0].url;
+    updateProgress('Searching', `Found website: ${businessUrl}`);
     
     // Now use smart scraper to extract structured data
     updateProgress('Extracting Data', 'Scraping website with Schema.org + Cheerio');
@@ -214,7 +231,7 @@ async function performSearch(queries: string[], businessInput: any): Promise<any
     
     // Fallback if no data found
     if (results.length === 0) {
-      updateProgress('Searching Google', 'No contact data found, using input data');
+      updateProgress('Searching', 'No contact data found, using input data');
       results.push({
         title: `${businessInput.name || 'Business'} - Contact Information`,
         url: businessInput.website || 'https://example.com',
@@ -225,7 +242,7 @@ async function performSearch(queries: string[], businessInput: any): Promise<any
     return results;
   } catch (error) {
     console.error('[EnhancedScraper] Web scraping failed:', error);
-    updateProgress('Searching Google', 'Scraping failed, using input data');
+    updateProgress('Searching', 'Scraping failed, using input data');
     
     // Return basic fallback from input
     return [{
