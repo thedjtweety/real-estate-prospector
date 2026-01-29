@@ -326,3 +326,26 @@
 - [ ] Michigan - Build license lookup module
 - [ ] Integrate state lookups into enhancedScraper
 - [ ] Test with brokerages from each state
+
+## Critical Data Quality Fixes (User Reported - High Priority)
+### Issue: Phone (205) 578-1650 returned terrible results
+- [x] Fix business name extraction - "Unknown Business" should show actual company name
+- [x] Extract business name from search result titles and descriptions
+- [x] Extract business name from website metadata (og:site_name, Schema.org)
+- [x] Improve contact name extraction - "Main Contact" is placeholder, need real names
+- [x] Add better name extraction patterns for real estate professionals
+- [x] Filter out generic names like "Main Contact", "Contact Us", "Info"
+- [x] Add industry verification - Reject non-real-estate businesses (e.g., MapQuest)
+- [x] Use Groq to verify business is real estate related
+- [x] Check for real estate keywords in business description
+- [ ] Leverage Groq for business intelligence beyond just DM scoring
+- [ ] Use Groq to analyze business context and extract key information
+- [ ] Use Groq to identify technology stack and pain points
+- [ ] Test with multiple phone numbers to verify improvements
+
+- [x] Add business intelligence analysis with Groq
+- [x] Extract technology stack (CRM, MLS, website platform)
+- [x] Identify pain points and business challenges
+- [x] Analyze company size and market position
+- [x] Search for recent news and company updates
+- [ ] Test with (205) 578-1650 and (607) 760-1995

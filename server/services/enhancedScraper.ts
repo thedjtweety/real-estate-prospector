@@ -33,6 +33,9 @@ import {
   type InfluenceScore,
 } from './associationLeadershipIntel';
 import { createProgressTracker, type ProgressCallback } from './progressTracker';
+import { extractBusinessName } from './businessNameExtractor';
+import { verifyRealEstateIndustry, isObviouslyNotRealEstate } from './industryVerifier';
+import { analyzeBusinessIntelligence } from './businessIntelligence';
 
 // Global progress tracker reference
 let globalProgressTracker: ReturnType<typeof createProgressTracker> | null = null;
@@ -220,14 +223,9 @@ async function performSearch(queries: string[], businessInput: any): Promise<any
       }
     }
     
-    // If no contacts found, create generic contact from business data
-    if (results.length === 0 && (scrapedData.email || scrapedData.phone)) {
-      results.push({
-        title: `${scrapedData.name} - Main Contact`,
-        url: scrapedData.website || businessInput.website || 'https://example.com',
-        snippet: `Email: ${scrapedData.email || 'N/A'}, Phone: ${scrapedData.phone || 'N/A'}`
-      });
-    }
+    // If no contacts found, don't create fake "Main Contact" placeholder
+    // Real contacts should be extracted from the website or search results
+    // Empty contact list is better than fake data
     
     // Fallback if no data found
     if (results.length === 0) {
@@ -290,16 +288,18 @@ function extractAllContactInfo(text: string): {
     addresses.push(...addressMatches);
   }
 
-  // Name patterns (Capitalized First Last)
-  const namePattern = /\b([A-Z][a-z]+\s+[A-Z][a-z]+)\b/g;
-  const nameMatches = text.match(namePattern);
-  if (nameMatches) {
+  // Name patterns (Capitalized First Last) - Import name validator
+  const { extractValidNames } = require('./nameValidator');
+  const extractedNames = extractValidNames(text);
+  
+  // Additional filtering for real estate context
+  const filtered = extractedNames.filter((name: string) => {
+    const lower = name.toLowerCase();
     // Filter out common false positives
-    const filtered = nameMatches.filter(name => 
-      !name.match(/^(Real Estate|United States|New York|Los Angeles|San Francisco)$/i)
-    );
-    names.push(...filtered);
-  }
+    return !lower.match(/real estate|united states|new york|los angeles|main contact|contact us|about us|our team/);
+  });
+  
+  names.push(...filtered);
 
   // Website/URL pattern
   const urlPattern = /https?:\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?/g;
@@ -323,8 +323,14 @@ function extractAllContactInfo(text: string): {
 function enrichDataFromResults(results: any[], input: any): any {
   updateProgress('Extracting contact information', 'Processing search results...');
   
+  // Extract business name from search results
+  const extractedName = extractBusinessName({
+    searchResults: results,
+    userInput: input.name
+  });
+  
   const enrichedData: any = {
-    name: input.name,
+    name: extractedName,
     phone: input.phone,
     email: input.email,
     website: input.website,
@@ -595,6 +601,79 @@ export async function scrapeWithEnhancements(input: {
     }
 
     updateProgress('Calculating confidence scores', `Overall confidence: ${enrichedData.confidence}%`);
+    
+    // Step 7: Verify industry (reject non-real-estate businesses)
+    updateProgress('Verifying industry', 'Checking if business is real estate related...');
+    
+    // Quick check for obvious non-real-estate businesses
+    if (isObviouslyNotRealEstate(enrichedData.name)) {
+      console.log('[EnhancedScraper] Business is obviously not real estate:', enrichedData.name);
+      updateProgress('Verifying industry', 'Not a real estate business - search failed');
+      return {
+        name: enrichedData.name,
+        contacts: [],
+        mlsAssociations: [],
+        dataSources: ['Industry Verification Failed'],
+        confidence: 0
+      };
+    }
+    
+    // Use Groq for intelligent industry verification
+    try {
+      const industryCheck = await verifyRealEstateIndustry({
+        name: enrichedData.name,
+        website: enrichedData.website,
+        description: searchResults[0]?.snippet,
+      });
+      
+      if (!industryCheck.isRealEstate) {
+        console.log('[EnhancedScraper] Industry verification failed:', industryCheck.reason);
+        updateProgress('Verifying industry', `Not real estate: ${industryCheck.reason}`);
+        return {
+          name: enrichedData.name,
+          contacts: [],
+          mlsAssociations: [],
+          dataSources: ['Industry Verification Failed'],
+          confidence: 0
+        };
+      }
+      
+      console.log('[EnhancedScraper] Industry verified:', industryCheck.reason);
+      updateProgress('Verifying industry', `Confirmed real estate business (${industryCheck.confidence}% confidence)`);
+      
+      // Boost confidence if industry is verified with high confidence
+      if (industryCheck.confidence >= 80) {
+        enrichedData.confidence = Math.min(enrichedData.confidence + 10, 95);
+      }
+    } catch (error) {
+      console.error('[EnhancedScraper] Industry verification failed:', error);
+      updateProgress('Verifying industry', 'Verification failed - continuing anyway');
+      // Don't fail the entire search if verification fails
+    }
+    
+    // Step 8: Analyze business intelligence
+    updateProgress('Analyzing business intelligence', 'Extracting technology stack and pain points...');
+    
+    let businessIntel: any = null;
+    try {
+      businessIntel = await analyzeBusinessIntelligence({
+        name: enrichedData.name,
+        website: enrichedData.website,
+        description: searchResults[0]?.snippet,
+        state: enrichedData.state,
+        contacts: enrichedData.contacts?.map((c: any) => ({
+          name: c.name,
+          title: c.title
+        }))
+      });
+      
+      console.log('[EnhancedScraper] Business intelligence gathered');
+      updateProgress('Analyzing business intelligence', 'Analysis complete');
+    } catch (error) {
+      console.error('[EnhancedScraper] Business intelligence analysis failed:', error);
+      updateProgress('Analyzing business intelligence', 'Analysis failed - continuing');
+    }
+    
     updateProgress('Finalizing results', 'Preparing final report...');
 
     const finalData: ScrapedBusinessData = {
