@@ -457,3 +457,24 @@
 - [x] Add retry wrapper for Groq LLM calls
 - [ ] Test Groq retry logic with simulated API failures
 - [x] Verify fresh searches always run (no caching)
+
+## State Lookup Expansion (User Requested)
+- [x] Implement NC (North Carolina) state lookup
+- [x] Implement GA (Georgia) state lookup
+- [x] Implement VA (Virginia) state lookup
+- [x] Implement NY (New York) state lookup
+- [x] Implement IN (Indiana) state lookup
+- [x] Implement KY (Kentucky) state lookup
+- [x] Implement LA (Louisiana) state lookup
+- [x] Implement SC (South Carolina) state lookup
+- [x] Implement AL (Alabama) state lookup
+- [x] Implement MS (Mississippi) state lookup
+- [x] Implement KS (Kansas) state lookup
+- [x] Implement NM (New Mexico) state lookup
+- [x] Implement NE (Nebraska) state lookup
+- [x] Implement WV (West Virginia) state lookup
+- [x] Implement ID (Idaho) state lookup
+- [x] Implement MT (Montana) state lookup
+- [x] Implement DE (Delaware) state lookup
+- [ ] Test all state lookups with sample brokerages
+- [ ] Verify 70%+ US coverage with state expansion
