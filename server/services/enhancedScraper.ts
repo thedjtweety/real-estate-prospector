@@ -83,6 +83,9 @@ function inferLocationFromPhone(phone: string): { city?: string, state?: string 
     '312': { city: 'Chicago', state: 'IL' },
     '617': { city: 'Boston', state: 'MA' },
     '404': { city: 'Atlanta', state: 'GA' },
+    '513': { city: 'Cincinnati', state: 'OH' },
+    '614': { city: 'Columbus', state: 'OH' },
+    '216': { city: 'Cleveland', state: 'OH' },
   };
   
   return areaCodeMap[areaCode] || null;
@@ -125,13 +128,20 @@ function buildSearchQueries(input: {
   
   // Strategy 4: Phone reverse lookup
   if (input.phone) {
+    // Format phone in multiple ways for better Google matching
+    const digits = input.phone.replace(/\D/g, '');
+    const formatted1 = `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`; // (513) 600-4117
+    const formatted2 = `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`; // 513-600-4117
+    
+    queries.push(`"${formatted1}" real estate`);
+    queries.push(`"${formatted2}" realtor`);
     queries.push(`"${input.phone}" real estate broker`);
-    queries.push(`"${input.phone}" realtor`);
     
     // Try to infer location from area code
     const location = inferLocationFromPhone(input.phone);
     if (location) {
-      queries.push(`real estate ${location.city} ${location.state} "${input.phone}"`);
+      queries.push(`real estate ${location.city} ${location.state} "${formatted1}"`);
+      queries.push(`realtor ${location.city} "${formatted2}"`);
     }
   }
   
