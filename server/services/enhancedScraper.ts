@@ -42,6 +42,9 @@ import { generateSearchQueries, generateContactQueries, type SearchInput } from 
 import { executeParallelSearches, aggregateSearchResults } from './parallelSearchExecutor';
 import { analyzeSearchResults, analyzeContactDetails } from './intelligentResultAnalyzer';
 import { crossReferenceData, deduplicateContacts } from './crossReferenceValidator';
+import { detectPersonVsBusiness } from './personVsBusinessDetector';
+import { generateAgentToBrokerageQueries } from './agentToBrokerageQueries';
+import { analyzeHierarchicalRelationship, scoreHierarchicalRelationship } from './hierarchicalRelationshipAnalyzer';
 
 // Global progress tracker reference
 let globalProgressTracker: ReturnType<typeof createProgressTracker> | null = null;
@@ -407,7 +410,18 @@ export async function scrapeWithEnhancements(input: {
 }): Promise<ScrapedBusinessData> {
   try {
     console.log('[EnhancedScraper] Starting comprehensive scrape');
-    updateProgress('Building intelligent queries', 'Analyzing input data...');
+    updateProgress('Analyzing input', 'Determining search type...');
+    
+    // Step 0: Detect if this is a person (agent) or business (brokerage) search
+    const detection = await detectPersonVsBusiness({
+      name: input.name,
+      phone: input.phone,
+      email: input.email
+    });
+    console.log(`[EnhancedScraper] Detection: ${detection.type} (${detection.confidence}% confidence) - ${detection.reasoning}`);
+    updateProgress('Analyzing input', `Detected: ${detection.type === 'person' ? 'Individual Agent' : 'Business/Brokerage'}`);
+    
+    const isAgentSearch = detection.type === 'person' && detection.confidence >= 60;
     
     // Step 1: Build intelligent search queries
     const queries = buildSearchQueries(input);
@@ -427,15 +441,35 @@ export async function scrapeWithEnhancements(input: {
 
     // Step 2: Generate multi-search queries (10-15 targeted searches)
     updateProgress('Generating search strategy', 'Creating 10-15 targeted searches...');
-    const searchInput: SearchInput = {
-      businessName: input.name,
-      phone: input.phone,
-      email: input.email,
-      city: input.city,
-      state: input.state,
-      website: input.website
-    };
-    const multiSearchQueries = generateSearchQueries(searchInput);
+    
+    let multiSearchQueries: any[];
+    
+    if (isAgentSearch) {
+      // Agent-to-Brokerage mode: Find the agent's employer
+      console.log('[EnhancedScraper] Using AGENT-TO-BROKERAGE search mode');
+      updateProgress('Generating search strategy', 'Finding agent brokerage affiliation...');
+      multiSearchQueries = generateAgentToBrokerageQueries({
+        name: input.name!,
+        phone: input.phone,
+        email: input.email,
+        city: input.city,
+        state: input.state
+      });
+    } else {
+      // Brokerage-to-Agents mode: Find agents at the brokerage
+      console.log('[EnhancedScraper] Using BROKERAGE-TO-AGENTS search mode');
+      updateProgress('Generating search strategy', 'Finding brokerage agents...');
+      const searchInput: SearchInput = {
+        businessName: input.name,
+        phone: input.phone,
+        email: input.email,
+        city: input.city,
+        state: input.state,
+        website: input.website
+      };
+      multiSearchQueries = generateSearchQueries(searchInput);
+    }
+    
     console.log(`[EnhancedScraper] Generated ${multiSearchQueries.length} targeted searches`);
     updateProgress('Generating search strategy', `Generated ${multiSearchQueries.length} search strategies`);
     
@@ -450,31 +484,88 @@ export async function scrapeWithEnhancements(input: {
     console.log(`[EnhancedScraper] Completed ${parallelResults.length} searches`);
     updateProgress('Executing searches', `Completed ${parallelResults.length} searches`);
     
-    // Step 4: Analyze all results with Groq
-    updateProgress('Analyzing results', 'Using AI to extract structured intelligence...');
-    const analyzedIntel = await analyzeSearchResults(parallelResults, {
-      businessName: input.name,
-      phone: input.phone,
-      email: input.email
-    });
-    console.log(`[EnhancedScraper] AI analysis complete: ${analyzedIntel.decisionMakers.length} decision-makers found`);
-    updateProgress('Analyzing results', `Found ${analyzedIntel.decisionMakers.length} decision-makers`);
+    // Step 4: Analyze results based on search mode
+    let hierarchicalRelationship: any = null;
+    let analyzedIntel: any = null;
+    let crossReferenced: any = null;
+    let uniqueContacts: any[] = [];
     
-    // Step 5: Cross-reference data for validation
-    updateProgress('Cross-referencing data', 'Validating data across multiple sources...');
-    const crossReferenced = crossReferenceData(analyzedIntel, parallelResults);
-    console.log(`[EnhancedScraper] Cross-reference complete: ${crossReferenced.overallConfidence}% confidence`);
-    updateProgress('Cross-referencing data', `Validation complete: ${crossReferenced.overallConfidence}% confidence`);
-    
-    // Step 6: Deduplicate contacts
-    const uniqueContacts = deduplicateContacts(crossReferenced.decisionMakers);
-    console.log(`[EnhancedScraper] Deduplicated to ${uniqueContacts.length} unique contacts`);
+    if (isAgentSearch) {
+      // Agent-to-Brokerage analysis: Extract hierarchical relationship
+      updateProgress('Analyzing results', 'Extracting agent → team → brokerage relationships...');
+      hierarchicalRelationship = await analyzeHierarchicalRelationship(parallelResults, {
+        name: input.name!,
+        phone: input.phone,
+        email: input.email
+      });
+      console.log(`[EnhancedScraper] Hierarchical analysis complete:`);
+      console.log(`  Agent: ${hierarchicalRelationship.agent.name}`);
+      console.log(`  Team: ${hierarchicalRelationship.team?.name || 'None'}`);
+      console.log(`  Brokerage: ${hierarchicalRelationship.brokerage.name}`);
+      updateProgress('Analyzing results', `Found: ${hierarchicalRelationship.brokerage.name}`);
+    } else {
+      // Brokerage-to-Agents analysis: Extract decision-makers
+      updateProgress('Analyzing results', 'Using AI to extract structured intelligence...');
+      analyzedIntel = await analyzeSearchResults(parallelResults, {
+        businessName: input.name,
+        phone: input.phone,
+        email: input.email
+      });
+      console.log(`[EnhancedScraper] AI analysis complete: ${analyzedIntel.decisionMakers.length} decision-makers found`);
+      updateProgress('Analyzing results', `Found ${analyzedIntel.decisionMakers.length} decision-makers`);
+      
+      // Step 5: Cross-reference data for validation
+      updateProgress('Cross-referencing data', 'Validating data across multiple sources...');
+      crossReferenced = crossReferenceData(analyzedIntel, parallelResults);
+      console.log(`[EnhancedScraper] Cross-reference complete: ${crossReferenced.overallConfidence}% confidence`);
+      updateProgress('Cross-referencing data', `Validation complete: ${crossReferenced.overallConfidence}% confidence`);
+      
+      // Step 6: Deduplicate contacts
+      uniqueContacts = deduplicateContacts(crossReferenced.decisionMakers);
+      console.log(`[EnhancedScraper] Deduplicated to ${uniqueContacts.length} unique contacts`);
+    }
     
     // Use cross-referenced data if multi-search succeeded
     let enrichedData: any;
     let searchResults: any[] = [];
     
-    if (parallelResults.length > 0 && uniqueContacts.length > 0) {
+    if (isAgentSearch && hierarchicalRelationship) {
+      // Agent-to-Brokerage mode: Return brokerage as main business with agent as contact
+      console.log('[EnhancedScraper] Using hierarchical relationship data');
+      enrichedData = {
+        name: hierarchicalRelationship.brokerage.name,
+        phone: hierarchicalRelationship.brokerage.phone,
+        email: hierarchicalRelationship.brokerage.email,
+        website: hierarchicalRelationship.brokerage.website,
+        address: hierarchicalRelationship.brokerage.address,
+        city: input.city,
+        state: input.state,
+        zipCode: input.zipCode,
+        contacts: [{
+          name: hierarchicalRelationship.agent.name,
+          role: hierarchicalRelationship.agent.title || hierarchicalRelationship.agent.role,
+          title: hierarchicalRelationship.agent.title,
+          email: hierarchicalRelationship.agent.email,
+          phone: hierarchicalRelationship.agent.phone,
+          linkedinUrl: hierarchicalRelationship.agent.linkedinUrl,
+          decisionMakerScore: hierarchicalRelationship.agent.confidence,
+          approachOrder: 1,
+          teamName: hierarchicalRelationship.team?.name,
+          teamRole: hierarchicalRelationship.team?.role,
+        }],
+        possiblyRelated: hierarchicalRelationship.possiblyRelated || [],
+        confidence: hierarchicalRelationship.overallConfidence,
+        dataSources: ['Agent-to-Brokerage Intelligence', 'Brave Search', 'DuckDuckGo', 'Groq AI Analysis'],
+      };
+      
+      // Create mock search result for industry verification
+      searchResults = [{
+        title: enrichedData.name,
+        url: enrichedData.website || '',
+        snippet: `Real estate brokerage: ${enrichedData.name}`
+      }];
+    } else if (parallelResults.length > 0 && uniqueContacts.length > 0) {
+      // Brokerage-to-Agents mode: Return brokerage with all agents
       console.log('[EnhancedScraper] Using multi-search cross-referenced data');
       enrichedData = {
         name: crossReferenced.businessName.value || input.name || 'Unknown Business',
@@ -495,6 +586,7 @@ export async function scrapeWithEnhancements(input: {
           decisionMakerScore: c.confidence,
           approachOrder: idx + 1,
         })),
+        possiblyRelated: [],
         confidence: crossReferenced.overallConfidence,
         dataSources: ['Multi-Search Intelligence Pipeline', 'Brave Search', 'DuckDuckGo', 'Groq AI Analysis'],
       };

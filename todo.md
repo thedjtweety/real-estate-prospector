@@ -405,3 +405,15 @@
 - [x] Format contact information with icons for better readability
 - [x] Integrate cross-referenced data from multi-search pipeline
 - [ ] Test with real search results to verify all data displays
+
+## Agent-to-Brokerage Intelligence System (User Requested)
+- [x] Create person vs business name detector using Groq
+- [x] Build agent-to-brokerage search query generator
+- [x] Implement hierarchical relationship analyzer (Agent → Team → Brokerage)
+- [x] Add team detection logic (e.g., "The Smith Team at Keller Williams")
+- [x] Create role detection for agents, team leaders, and brokers
+- [x] Integrate dual-mode logic into enhancedScraper (brokerage search vs agent search)
+- [x] Add "Possibly Related" section to UI for uncertain data
+- [x] Update UI to show Agent → Team → Brokerage hierarchy
+- [ ] Test with individual agent names and phone numbers
+- [ ] Verify brokerage affiliation detection accuracy

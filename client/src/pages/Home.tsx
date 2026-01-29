@@ -518,6 +518,18 @@ export default function Home() {
                                 )}
                               </div>
                               
+                              {/* Team Affiliation */}
+                              {contact.teamName && (
+                                <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                                  <p className="text-sm text-blue-800">
+                                    <span className="font-semibold">👥 Team:</span> {contact.teamName}
+                                    {contact.teamRole && (
+                                      <span className="ml-2 text-xs capitalize">({contact.teamRole.replace(/_/g, ' ')})</span>
+                                    )}
+                                  </p>
+                                </div>
+                              )}
+                              
                               {/* Best Contact Method */}
                               {contact.bestContactMethod && contact.bestContactMethod !== 'unknown' && (
                                 <p className="text-sm text-navy-600">
@@ -594,6 +606,43 @@ export default function Home() {
                         </div>
                       );
                     })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Possibly Related */}
+          {searchResult.possiblyRelated && searchResult.possiblyRelated.length > 0 && (
+            <Card className="border-yellow-200 shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-yellow-50 to-gold-50">
+                <CardTitle className="text-xl font-display flex items-center gap-2">
+                  🔍 Possibly Related
+                </CardTitle>
+                <CardDescription>
+                  Uncertain but potentially useful information discovered during research
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="space-y-3">
+                  {searchResult.possiblyRelated.map((item: any, idx: number) => (
+                    <div key={idx} className="p-4 border border-yellow-200 bg-yellow-50/30 rounded-lg">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge variant="outline" className="capitalize border-yellow-400 text-yellow-700">
+                              {item.type}
+                            </Badge>
+                            <p className="font-semibold text-navy-900">{item.name}</p>
+                          </div>
+                          <p className="text-sm text-navy-600">{item.details}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-navy-500">Confidence</p>
+                          <p className="text-sm font-semibold text-navy-700">{item.confidence}%</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
